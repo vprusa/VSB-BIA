@@ -39,7 +39,7 @@ class Kruskal(object):
     def MAKE_SET(self, v):
         pprint('MAKE_SET')
         pprint(v)
-        self.ds.find(v)
+        self.ds.union(v, None)
         pass
 
     def FIND_SET(self, e):
@@ -63,19 +63,11 @@ class Kruskal(object):
         for v in V(G):
             self.MAKE_SET(v)
             pprint(v)
-        pprint("list")
-        pprint(list(self.ds))
-
         pprint("sort edges according to w into a non-decreasing sequence")
         sortedPairs = sorted(G.edges().data(), key=lambda e: -e[2]['weight'])
-        pprint(sortedPairs)
         for e in sortedPairs:
-            pprint(e)
             if self.FIND_SET(e[0]) != self.FIND_SET(e[1]):
                 self.union(F, e)
-        pprint(F)
-        pprint("list")
-        pprint(list(self.ds))
 
 
 #
