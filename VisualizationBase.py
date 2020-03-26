@@ -15,6 +15,8 @@ matplotlib.use("TkAgg")
 
 class VisualizationBase(object):
     G = None
+    plt = None
+    pos = None
 
     def __init__(self):
         self.G = nx.cubical_graph()
@@ -44,6 +46,11 @@ class VisualizationBase(object):
                                             node_color="white", ax=self.ax)
         if (null_nodes is not None):
             null_nodes.set_edgecolor("black")
+            nullNodesIds = set(self.G.nodes()) - set(forestNodes)
+            # dbg("nullNodes", nullNodes)
+            nx.draw_networkx_labels(self.G, pos=self.pos, labels=dict(zip(nullNodesIds, nullNodesIds)),
+                                    font_color="black",
+                                    ax=self.ax)
 
         # Query nodes
         self.idx_colors = sns.cubehelix_palette(len(forestNodes), start=.5, rot=-.75)[::-1]

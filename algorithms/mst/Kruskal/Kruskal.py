@@ -45,6 +45,5 @@ class Kruskal(VisualizationBase):
         dbg("list(self.ds)", list(self.ds))
         dbg("list(ds.itersets())", list(self.ds.itersets()))
         dbg("F", F)
-        list(self.ds)
-
+        F
 #
