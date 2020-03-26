@@ -29,12 +29,18 @@ for (u, v, w) in r.G.edges(data=True):
 
 G = r.G
 pos = nx.spring_layout(G)
+r.alg(r.G)
+r.plt.pause(10)
+exit(0)
 
 idx_colors = sns.cubehelix_palette(8, start=.5, rot=-.75)[::-1]
 #idx_weights = [3,2,1]
 idx_weights = range(3,1)
 # Build plot
 fig, ax = plt.subplots(figsize=(6,4))
+
+r.alg(r.G)
+
 
 def update(num):
     ax.clear()
