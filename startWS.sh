@@ -8,7 +8,7 @@ PROJ_DIR=/home/vprusa/workspace/school/MUNI/MGR/3LS/MA015/proj/MA015-algorithms-
 echo "In dir:"
 echo ${PROJ_DIR}
 
-printf "Exec: \nsource .virtenv/bin/activate\n.virtenv/bin/iptyhon\n" 
+printf "Exec: \nsource .virtenv/bin/activate\n.virtenv/bin/ipython\n" 
 
 cd ${PROJ_DIR}
 

@@ -8,7 +8,7 @@ class Kruskal(VisualizationBase):
     ds = DisjointSet()
 
     def MAKE_SET(self, v):
-        #self.ds.make(v)
+        # self.ds.make(v)
         self.ds._data[v] = v
 
     def FIND_SET(self, e):
@@ -18,6 +18,18 @@ class Kruskal(VisualizationBase):
         self.ds.union(F, e)
 
     def alg(self, G):
+        """
+        F ← ( V , ∅)
+        foreach v ∈ V ( G ) do MAKE-SET( v )
+        "sort edges according to w into a non-decreasing sequence"
+        foreach e = { u , v } in this order do
+            if FIND-SET( u ) != FIND-SET( v ) then
+                F ← F ∪ e
+                UNION( u, v )
+
+        :param G:graph
+        :return P:path
+        """
         F = list(list())
         dbg("list(self.ds) - 0", list(self.ds))
         self.update(F)
@@ -46,4 +58,3 @@ class Kruskal(VisualizationBase):
         dbg("list(ds.itersets())", list(self.ds.itersets()))
         dbg("F", F)
         F
-#
