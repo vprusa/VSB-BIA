@@ -6,9 +6,9 @@ echo "Starting MA015 algorithms workspace"
 
 PROJ_DIR=/home/vprusa/workspace/school/MUNI/MGR/3LS/MA015/proj/MA015-algorithms-samples
 echo "In dir:"
-echo ${PROJ_DIR}
+echo "cd ${PROJ_DIR}"
 
-printf "Exec: \nsource .virtenv/bin/activate\n.virtenv/bin/ipython\n" 
+printf "source .virtenv/bin/activate\n.virtenv/bin/ipython\n" 
 
 cd ${PROJ_DIR}
 

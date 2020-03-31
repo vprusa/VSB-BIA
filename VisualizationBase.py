@@ -14,6 +14,7 @@ matplotlib.use("TkAgg")
 
 
 class VisualizationBase(object):
+    frameNo = 0
     G = None
     plt = None
     pos = None
@@ -36,7 +37,7 @@ class VisualizationBase(object):
         pass
         # alg(self, G) should have algorithm-required inputs as parameters
 
-    def update(self, forest = list(list()), step=0):
+    def update(self, forest = list(list())):
         self.ax.clear()
         dbg("forest", forest)
 
@@ -83,6 +84,9 @@ class VisualizationBase(object):
         # Scale plot ax
         self.ax.set_xticks([])
         self.ax.set_yticks([])
-        self.ax.set_title("Step #{} ".format(step))
+        self.ax.set_title("Step #{} ".format(VisualizationBase.frameNo))
 
+        # self.plt.pause(5)
         self.plt.pause(1)
+        # self.plt.pause(3)
+        VisualizationBase.frameNo += 1

@@ -1,3 +1,5 @@
+import sys
+from pprint import pprint
 try:
     import seaborn as sns
     pass
@@ -9,6 +11,11 @@ import matplotlib.animation ; matplotlib.use("TkAgg")
 from algorithms.mst.JarnikPrimDijkstra.JarnikPrimDijkstra_PriorityQueue import JarnikPrimDijkstra_PriorityQueue as JarnikPrimDijkstra_PriorityQueue
 r = JarnikPrimDijkstra_PriorityQueue()
 r.alg(r.G)
+# try:
+#     r.alg(r.G)
+# except:
+#     exc_info = sys.exc_info()
+#     pprint(exc_info)
 r.plt.pause(10)
 exit(0)
 #

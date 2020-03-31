@@ -44,7 +44,7 @@ class Kruskal(VisualizationBase):
         sortedPairs = sorted(G.edges().data(), key=lambda e: e[2]['weight'])
         dbg("sortedPairs", sortedPairs)
 
-        for step, e in enumerate(sortedPairs):
+        for e in enumerate(sortedPairs):
             dbg("e", e)
             fs0 = self.FIND_SET(e[0])
             dbg("fs0", fs0)
@@ -53,7 +53,7 @@ class Kruskal(VisualizationBase):
             if fs0 != fs1:
                 self.UNION(e[0], e[1])
                 F.append(list(e))
-                self.update(forest=F, step=step + 1)
+                self.update(forest=F)
         dbg("list(self.ds)", list(self.ds))
         dbg("list(ds.itersets())", list(self.ds.itersets()))
         dbg("F", F)

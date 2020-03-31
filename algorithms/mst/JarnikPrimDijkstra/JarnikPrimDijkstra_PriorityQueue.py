@@ -15,15 +15,25 @@ Helpful links:
 '''
 class JarnikPrimDijkstra_PriorityQueue(JarnikPrimDijkstra):
 
-    def some(self, of):
-        dbg("of", list(of))
+    Q = []
+    key = dict()
+    pred = dict()
+
+    def someV(s, of):
         return random.choice(list(of))
 
-    def INSERT(self, Q, v):
-        Q
-        pass
+    def INSERT(s, Q, v):
+        heapq.heappush(Q, (sys.maxsize, v))
 
-    def alg(self, G):
+    def EXTRACT_MIN(s, Q):
+        return heapq.heappop(Q)
+
+    def DECREASE_KEY(s, v, w):
+        s.key[v] = w
+        s.Q = [q for q in s.Q if q[1] != v]
+        heapq.heappush(s.Q, (w, v))
+
+    def alg(s, G):
         """
         INIT( Q )
         foreach v ∈ V ( G ) do
@@ -41,66 +51,44 @@ class JarnikPrimDijkstra_PriorityQueue(JarnikPrimDijkstra):
         :return P:path
         """
 
-        key = dict()
-        pred = dict()
-        s = self.some(V(G))
-        self.update(list(list()))
+        s.key = dict()
+        s.pred = dict()
 
-        Q = []
+        some = s.someV(V(G))
+        s.update(list(list()))
+
+        s.Q = []
         for v in V(G):
-            dbg("v", v)
-            key[v] = sys.maxsize
-            pred[v] = 0
-            #self.INSERT(Q,v)
-            # Q.append(v)
-            heapq.heappush(Q, (sys.maxsize, v))
+            if(v == some): continue
+            s.key[v] = sys.maxsize
+            # TODO s.update() input params (s.pred containing nodes instead edges)
+            s.pred[v] = (v,v, {'weight': 0})
+            s.INSERT(s.Q,v)
 
-        key[s] = 0
-        dbg("s",s)
-        dbg("key",key[s])
-        dbg("Q", Q)
+        s.pred[some] = (some, some, {'weight': 0})
+        heapq.heappush(s.Q, (0, some))
+        s.key[some] = 0
+        s.update(list(s.pred.values()))
 
-        while(len(Q) > 0):
-            u = heapq.heappop(Q)
-
-            dbg("Q",Q)
-            dbg("min u",u)
+        while(len(s.Q) > 0):
+            ut = s.EXTRACT_MIN(s.Q)
+            u = ut[1]
             # foreach edge { u , v } s.t. v is in Q do
-            # TODO fix performance, refactor
-            Qv = list(i[1] for i in Q)
-            for e in list(filter(lambda e: (e[1] in Qv and e[0] == u[1]), list(G.edges().data()))):
+            Qv = list(i[1] for i in s.Q)
+            Gd = G.edges().data()
+            # TODO try use G.neighbours(u)
+            Qe = list(filter(lambda e: (e[0] == u and e[1] in Qv) or (e[1] == u and e[0] in Qv), list(Gd)))
+            for e in Qe:
+                # switch because edge may not always be in lexicographical order
+                if(e[1] == u):
+                    e = (e[1],e[0],e[2])
                 w = e[2]['weight']
-                dbg("e",e)
-                dbg("w",w)
-                dbg("Q",Q)
-                dbg("w",w)
-                dbg("e[1]",e[1])
-                dbg("key[e[1]]", key[e[1]])
-                dbg("key", key)
-                dbg("pred", pred)
-
-                u = e[0]
                 v = e[1]
-                if w < key[v]:
-                    dbg("Decreasing")
-                    #self.DECREASE_KEY(Q,v,w)
-                    #heapq.heapreplace(Q,(w,v))
-                    key[v] = w
-                    # pq.push(make_pair(key[v], v));
-                    heapq.heappush(Q, (w, v))
-                    pred[v] = u
-        dbg("key", key)
-        dbg("pred", pred)
-        dbg("Q", Q)
-        # self.update()
-
-        # dbg("G", G.edges())
-
-    def EXTRACT_MIN(self, Q):
-        #Q.remove(min(Q))
-        pass
-
-    def DECREASE_KEY(self, Q, v, w):
-        Q[v]
-        pass
+                keyV = s.key[v]
+                if w < keyV:
+                    s.DECREASE_KEY(v,w)
+                    s.pred[v] = e
+                    s.update(list(s.pred.values()))
+        dbg("s.pred", s.pred)
+        dbg("Q", s.Q)
 
