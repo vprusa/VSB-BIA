@@ -1,10 +1,6 @@
-from queue import Queue
-
 from algorithms.mst.JarnikPrimDijkstra.JarnikPrimDijkstra import JarnikPrimDijkstra
-from base import *
 from VisualizationBase import *
 import heapq
-import operator
 import random
 import sys
 
@@ -30,6 +26,7 @@ class JarnikPrimDijkstra_PriorityQueue(JarnikPrimDijkstra):
 
     def DECREASE_KEY(s, v, w):
         s.key[v] = w
+        # TODO optimalization, the C implementation uses v as key but then finding max would be done by searching over keys
         s.Q = [q for q in s.Q if q[1] != v]
         heapq.heappush(s.Q, (w, v))
 
@@ -76,10 +73,10 @@ class JarnikPrimDijkstra_PriorityQueue(JarnikPrimDijkstra):
             # foreach edge { u , v } s.t. v is in Q do
             Qv = list(i[1] for i in s.Q)
             Gd = G.edges().data()
-            # TODO try use G.neighbours(u)
+            # TODO try use G.neighbours(u) or r.G.edges(u) **
             Qe = list(filter(lambda e: (e[0] == u and e[1] in Qv) or (e[1] == u and e[0] in Qv), list(Gd)))
             for e in Qe:
-                # switch because edge may not always be in lexicographical order
+                # ** switch because edge may not always be in lexicographical order
                 if(e[1] == u):
                     e = (e[1],e[0],e[2])
                 w = e[2]['weight']

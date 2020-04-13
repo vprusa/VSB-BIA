@@ -1,4 +1,3 @@
-from base import *
 from VisualizationBase import *
 
 from disjoint_set import DisjointSet
@@ -30,6 +29,8 @@ class Kruskal(VisualizationBase):
         :param G:graph
         :return P:path
         """
+
+        # TODO change to V
         F = list(list())
         dbg("list(self.ds) - 0", list(self.ds))
         self.update(F)
@@ -53,7 +54,7 @@ class Kruskal(VisualizationBase):
             if fs0 != fs1:
                 self.UNION(e[0], e[1])
                 F.append(list(e))
-                self.update(forest=F)
+                self.update(edges=F)
         dbg("list(self.ds)", list(self.ds))
         dbg("list(ds.itersets())", list(self.ds.itersets()))
         dbg("F", F)

@@ -37,18 +37,19 @@ class VisualizationBase(object):
         pass
         # alg(self, G) should have algorithm-required inputs as parameters
 
-    def update(self, forest = list(list())):
+    def update(self, edges=None):
+        if edges is None:
+            edges = list(list())
         self.ax.clear()
-        dbg("forest", forest)
 
         # Background nodes
         nx.draw_networkx_edges(self.G, pos=self.pos, ax=self.ax, edge_color="gray")
-        forestNodes = list([item for sublist in (([l[0], l[1]]) for l in forest) for item in sublist])
+        forestNodes = list([item for sublist in (([l[0], l[1]]) for l in edges) for item in sublist])
 
-        dbg("forestNodes", forestNodes)
-        forestNodes = list(filter(None,forestNodes))
-        dbg("forestNodes -!None", forestNodes)
-        dbg(set(self.G.nodes()))
+        # dbg("forestNodes", forestNodes)
+        forestNodes = list(filter(None, forestNodes))
+        # dbg("forestNodes -!None", forestNodes)
+        # dbg(set(self.G.nodes()))
         null_nodes = nx.draw_networkx_nodes(self.G, pos=self.pos, nodelist=set(self.G.nodes()) - set(forestNodes),
                                             node_color="white", ax=self.ax)
         if (null_nodes is not None):
@@ -68,14 +69,15 @@ class VisualizationBase(object):
         nx.draw_networkx_labels(self.G, pos=self.pos, labels=dict(zip(forestNodes, forestNodes)), font_color="white",
                                 ax=self.ax)
 
-        edges = list((l[0], l[1]) for l in forest)
+        edges = list((l[0], l[1]) for l in edges)
         # TODO refactor edge-has-none check -> default behaviour if forest is single node
-        #hasNone = edges is not None and (len(edges[0]) != 0 and len(edges[0][0]) != 0) and list(i if (i[0] is not None and i[1] is not None) else None for i in edges)[0] is not None
+        # hasNone = edges is not None and (len(edges[0]) != 0 and len(edges[0][0]) != 0) and list(i if (i[0] is not None and i[1] is not None) else None for i in edges)[0] is not None
         hasEdge = (len(edges) > 0 and len(edges[0]) > 0)
         if hasEdge:
-            dbg("edgelist", edges)
-            dbg("self.G.edges()", self.G.edges())
-            nx.draw_networkx_edges(self.G, pos=self.pos, edgelist=edges, width=self.idx_weights[:len(edges)], ax=self.ax)
+            # dbg("edgelist", edges)
+            # dbg("self.G.edges()", self.G.edges())
+            nx.draw_networkx_edges(self.G, pos=self.pos, edgelist=edges, width=self.idx_weights[:len(edges)],
+                                   ax=self.ax)
 
             # draw weights
             labels = nx.get_edge_attributes(self.G, 'weight')
