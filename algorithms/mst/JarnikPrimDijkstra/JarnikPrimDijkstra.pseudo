@@ -1,5 +1,0 @@
-choose some s ∈ V ( G )
-T ← ({ s }, ∅)
-for n − 1-times do
-e ← the lightest edge of G leaving T
-T ← T ∪ { e }

@@ -1,9 +1,4 @@
 from pprint import pprint
-import networkx as nx
-from networkx import Graph as nxGraph
-import matplotlib.pyplot as plt
-import sys
-from pprint import pprint
 
 try:
     import seaborn as sns
@@ -46,7 +41,6 @@ def run(args):
 
     lecture = args.lecture.lower()
     algName = args.algorithm
-    from algorithms.mst.Boruvka.Boruvka import Boruvka as Boruvka
     package = "algorithms." + lecture + "." + algName + "." + algName
     name = algName
     algClass = getattr(__import__(package, fromlist=[name]), name)
