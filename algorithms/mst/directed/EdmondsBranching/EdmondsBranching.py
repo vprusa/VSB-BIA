@@ -8,7 +8,29 @@ class EdmondsBranching(VisualizationBase):
     visualizeTrees = False
     visualizeComponents = True
 
-    def reducedWeight(self, D, w):
+    """
+    Direction = order of vertices in edges 
+    .virtenv/bin/ipython3 -i -c "%run ./run.py --l=mst.directed --a=EdmondsBranching --g cubical_graph --kr 10"
+    .virtenv/bin/ipython3 -i -c "%run ./run.py --l=mst.directed --a=EdmondsBranching --g cubical_graph --kr 10 \
+    --d \"[(0,1,{'weight': 2}),(1,2,{'weight': 6}),(0,3,{'weight': 5}),(3,1,{'weight': 1}),(1,4,{'weight': 3}),
+           (4,3,{'weight': 4}),(4,5,{'weight': 7}),(1,5,{'weight': 8}),(2,5,{'weight': 9})]\""
+    
+    
+    Edges: [(0,1,{2}),(1,2,{6}), (0,3,{5}),(3,1,{1}),(1,4,{3}),(4,3,{4}),(4,5,{7}), (1,5,{8}),(2,5,{9})]
+
+    
+    Some ASCII art graph 
+    
+    0 ---2--> 1 ---6--> 2
+    |      7\ | \       |
+    5    1/   3  \_8_   9
+    |  _/     |      \  |
+    v /       V      _V V
+    3 <--4--- 4 ---7--> 5
+    """
+
+
+    def reducedWeight(s, D, w):
         """
         foreach e in E(D) do
             w'(e) = w(e) − w(e_v)
@@ -18,14 +40,17 @@ class EdmondsBranching(VisualizationBase):
         """
         return
 
-    def isAnArborescence(self, D):
+    def isAnArborescence(s, D):
         # TODO verification
         # 1. not formal
         # 2. formal
         return True
 
+    def alg(s,D):
+        # s.algRec(D, r, w)
+        pass
 
-    def alg(s, D, r, w):
+    def algRec(s, D, r, w):
         # TODO decide how to deal with storing weights w
         # - own structure
         # - or duplication of D

@@ -35,6 +35,8 @@ def parseArgs():
 
     return (p.parse_args())
 
+r = None
+globR = None
 
 def run(args):
     matplotlib.use("TkAgg")
@@ -52,8 +54,8 @@ def run(args):
     except:
         exc_info = sys.exc_info()
         pprint(exc_info)
-    r.plt.pause(args.keepRunning)
-    exit(0)
+        # r.plt.pause(args.keepRunning)
+    # exit(0)
 
     pass
 
@@ -70,7 +72,6 @@ Exec:
 
 """
 if __name__ == '__main__':
-
     if sys.version_info < (3, 0, 0):
         sys.stderr.write("You need python 3.0 or later to run this script\n")
         sys.exit(1)
@@ -79,6 +80,7 @@ if __name__ == '__main__':
     try:
         args = parseArgs()
         print(args)
+        print("source .virtenv/bin/activate && python3 ./run.py --l MST --a Boruvka --g cubical_graph --kr 10")
     except:
         printHelp()
 
