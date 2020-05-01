@@ -7,6 +7,7 @@ class EdmondsBranching(VisualizationBase):
     """
     visualizeTrees = False
     visualizeComponents = True
+    isDirectedG = True
 
     """
     Direction = order of vertices in edges 
@@ -17,18 +18,16 @@ class EdmondsBranching(VisualizationBase):
     
     
     Edges: [(0,1,{2}),(1,2,{6}), (0,3,{5}),(3,1,{1}),(1,4,{3}),(4,3,{4}),(4,5,{7}), (1,5,{8}),(2,5,{9})]
-
     
-    Some ASCII art graph 
+    Some ASCII art graph (0=r) 
     
-    0 ---2--> 1 ---6--> 2
-    |      7\ | \       |
-    5    1/   3  \_8_   9
-    |  _/     |      \  |
-    v /       V      _V V
-    3 <--4--- 4 ---7--> 5
+    (0)----2--->(1)----6--->(2)
+     |        7\ | \__       |
+     5    _1_/   3    \_8_   9
+     |  _/       |        \  |
+     v /         V        _V V
+    (3)<---4----(4)----7--->(5)
     """
-
 
     def reducedWeight(s, D, w):
         """
@@ -46,9 +45,12 @@ class EdmondsBranching(VisualizationBase):
         # 2. formal
         return True
 
-    def alg(s,D):
-        # s.algRec(D, r, w)
-        pass
+    def alg(s, D):
+        resultEdges = list(list())
+        s.update()
+
+        T = s.algRec(D, r=D.nodes(0), w=D.edges(data=True))
+        return T
 
     def algRec(s, D, r, w):
         # TODO decide how to deal with storing weights w
@@ -77,12 +79,47 @@ class EdmondsBranching(VisualizationBase):
         :return T:path
         """
 
-        resultEdges = list(list())
-
 
         F = list(list())
+        # TODO fix
+        w_0 = list(list())
 
-        for v in (V(D) - {r}):
+        for v in V(D):
+            if v == r:
+                dbg("skip root", r)
+                continue
+            e_v = s.edgeOfMin(weight=w, entering=v)
+            F.append(e_v)
+            for e in E(D):
+                # w'(e) = w(e) - w(e_v)
+                w_0[e] = w(e) - w(e_v)
+                pass
+            pass
+        if s.isAnArborescence(F):
+            T = (V, F)
+            return T
+            pass
+        else:
+            D_0 = s.contractCyclesIn(V, F)
+            T_0 = s.alg(D_0, r, w_0)
+            T = s.expandCycles(T_0)
+            return T
             pass
 
-        return resultEdges
+        pass
+        # s.contractCyclesIn(V,F)
+        # return resultEdges
+
+    def edgeOf(self, weight, entering):
+        """
+        :return e:'edge of minimum weight entering v'
+        """
+        e = weight.in_edges(entering)
+        return e
+
+    def contractCyclesIn(self, V, F):
+        pass
+
+    def expandCycles(self, T):
+        # minus one edge
+        pass

@@ -25,6 +25,7 @@ def parseArgs():
     p.add_argument("--lecture", "--l", required=True, help="Algorithm from lecture")
     p.add_argument("--keepRunning", "--kr", default=5, type=float, help="Keep visualization running")
     p.add_argument("--frameTimeout", "--t", default=1, type=float, help="Visualization frame timeout")
+    p.add_argument("--directed", "--dir", action='store_true', help="Default Undirected graph")
     # p.add_argument("-h", "--help", help="Prints help")
 
     group1 = p.add_mutually_exclusive_group(required=True)
@@ -35,8 +36,10 @@ def parseArgs():
 
     return (p.parse_args())
 
+
 r = None
 globR = None
+
 
 def run(args):
     matplotlib.use("TkAgg")
@@ -46,8 +49,8 @@ def run(args):
     package = "algorithms." + lecture + "." + algName + "." + algName
     name = algName
     algClass = getattr(__import__(package, fromlist=[name]), name)
-    r = algClass(nxgraphType=args.graph, nxgraphOptions=args.graphOptions, graphData = args.graphData,
-                 frameTimeout=args.frameTimeout)
+    r = algClass(nxgraphType=args.graph, nxgraphOptions=args.graphOptions, graphData=args.graphData,
+                 isDirected=args.directed, frameTimeout=args.frameTimeout)
     try:
         print(r.G.edges(data=True))
         r.alg(r.G)
@@ -82,6 +85,8 @@ if __name__ == '__main__':
         print(args)
         print("source .virtenv/bin/activate && python3 ./run.py --l MST --a Boruvka --g cubical_graph --kr 10")
     except:
+        exc_info = sys.exc_info()
+        pprint(exc_info)
         printHelp()
 
     if args is not None:
