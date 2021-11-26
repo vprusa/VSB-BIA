@@ -45,10 +45,16 @@ class EdmondsBranching(VisualizationBase):
         # 2. formal
         return True
 
+    def edgeOfMinWeight(s, D, entering):
+        l = list(D.edges(entering, data=True))
+        if len(l) == 0:
+            return None
+        e = min(l, key=lambda x: x[2]['weight'])
+        return e
+
     def alg(s, D):
         resultEdges = list(list())
         s.update()
-
         T = s.algRec(D, r=D.nodes(0), w=D.edges(data=True))
         return T
 
@@ -78,7 +84,7 @@ class EdmondsBranching(VisualizationBase):
         :param G:graph
         :return T:path
         """
-
+        nx.minimum_spanning_arborescence()
 
         F = list(list())
         # TODO fix
@@ -88,11 +94,23 @@ class EdmondsBranching(VisualizationBase):
             if v == r:
                 dbg("skip root", r)
                 continue
-            e_v = s.edgeOfMin(weight=w, entering=v)
+            e_v = s.edgeOfMinWeight(D, v)
+            if e_v is None:
+                # no other edges
+                continue
             F.append(e_v)
             for e in E(D):
                 # w'(e) = w(e) - w(e_v)
-                w_0[e] = w(e) - w(e_v)
+                # w_0 = w(e)
+                w_0 = list(filter(lambda x: (x[0] == e[0] and x[1] == e[1]), list(w)))
+                # w_0_w = w(e)
+                w_0_w = w_0
+                # w_0_e_v = w(e_v)
+                w_0_e_v = list(filter(lambda x: (x[0] == e_v[0] and x[1] == e_v[1]), list(w)))
+                # w_0 = w(e) - w(e_v)
+                # w_0 = w_0_w[0][2]['weight'] - w_0_e_v[0][2]['weight']
+                w_0_w[0][2]['weight'] = w_0_w[0][2]['weight'] - w_0_e_v[0][2]['weight']
+                pprint(w)
                 pass
             pass
         if s.isAnArborescence(F):

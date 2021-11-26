@@ -22,8 +22,9 @@ class VisualizationBase(object):
     nxgraphOptions = None
     graphData = None
     G = None
+    D = None
     plt = None
-    pos = None
+    layout = None
 
     def __init__(s, nxgraphType=None, nxgraphOptions=None, graphData=None, isDirected=False, frameTimeout=1):
         s.frameTimeout = frameTimeout
@@ -37,7 +38,7 @@ class VisualizationBase(object):
             else:
                 s.G = getattr(nx, s.nxgraphType)(s.nxgraphOptions)
             if isDirected:
-                s.G=nx.to_directed(s.G) # if already directed creates deep copy
+                s.G = nx.to_directed(s.G)  # if already directed creates deep copy
             for (u, v, w) in s.G.edges(data=True):
                 w['weight'] = random.randint(0, 40)
         else:
@@ -54,7 +55,17 @@ class VisualizationBase(object):
         #     ))
 
         s.plt = plt
-        s.pos = nx.spring_layout(s.G)
+
+        # lets hardcode smth for now
+        # TODO elif (len(list(s.G.nodes())) == 8):
+        posIn = {}
+        if (len(list(s.G.nodes())) == 6):
+            posIn = dict({0: (0, 0), 1: (1, 0), 2: (2, 0), 3: (0, -1), 4: (1, -1), 5: (2, -1)})
+        else:
+            for i in list(s.G.nodes()):
+                posIn[i] = (i * 5, -i * 5)
+
+        s.layout = nx.spring_layout(s.G, pos=posIn, fixed=s.G.nodes())
         s.idx_weights = range(2, 30, 1)
 
         # Build plot
@@ -64,6 +75,7 @@ class VisualizationBase(object):
         pass
         # alg(self, G) should have algorithm-required inputs as parameters
 
+
     def update(s, edges=None):
         if edges is None:
             edges = list(list())
@@ -71,9 +83,9 @@ class VisualizationBase(object):
 
         # Background nodes
         pprint(s.G.edges())
-        nx.draw_networkx_edges(s.G, pos=s.pos, ax=s.ax, edge_color="gray",
+        nx.draw_networkx_edges(s.G, pos=s.layout, ax=s.ax, edge_color="gray",
                                # arrowstyle='->',
-                               arrowstyle= '-|>',
+                               arrowstyle='-|>',
                                arrowsize=10
                                )
         forestNodes = list([item for sublist in (([l[0], l[1]]) for l in edges) for item in sublist])
@@ -82,23 +94,23 @@ class VisualizationBase(object):
         forestNodes = list(filter(None, forestNodes))
         # dbg("forestNodes -!None", forestNodes)
         # dbg(set(self.G.nodes()))
-        null_nodes = nx.draw_networkx_nodes(s.G, pos=s.pos, nodelist=set(s.G.nodes()) - set(forestNodes),
+        null_nodes = nx.draw_networkx_nodes(s.G, pos=s.layout, nodelist=set(s.G.nodes()) - set(forestNodes),
                                             node_color="white", ax=s.ax)
         if (null_nodes is not None):
             null_nodes.set_edgecolor("black")
             nullNodesIds = set(s.G.nodes()) - set(forestNodes)
             # dbg("nullNodes", nullNodes)
-            nx.draw_networkx_labels(s.G, pos=s.pos, labels=dict(zip(nullNodesIds, nullNodesIds)),
+            nx.draw_networkx_labels(s.G, pos=s.layout, labels=dict(zip(nullNodesIds, nullNodesIds)),
                                     font_color="black",
                                     ax=s.ax)
 
         # Query nodes
         s.idx_colors = sns.cubehelix_palette(len(forestNodes), start=.5, rot=-.75)[::-1]
-        query_nodes = nx.draw_networkx_nodes(s.G, pos=s.pos, nodelist=forestNodes,
+        query_nodes = nx.draw_networkx_nodes(s.G, pos=s.layout, nodelist=forestNodes,
                                              node_color=s.idx_colors[:len(forestNodes)], ax=s.ax)
         if query_nodes is not None:
             query_nodes.set_edgecolor("white")
-        nx.draw_networkx_labels(s.G, pos=s.pos, labels=dict(zip(forestNodes, forestNodes)), font_color="white", ax=s.ax)
+        nx.draw_networkx_labels(s.G, pos=s.layout, labels=dict(zip(forestNodes, forestNodes)), font_color="white", ax=s.ax)
 
         edges = list((l[0], l[1]) for l in edges)
         # TODO refactor edge-has-none check -> default behaviour if forest is single node
@@ -108,7 +120,7 @@ class VisualizationBase(object):
         # dbg("edgelist", edges)
         # dbg("self.G.edges()", self.G.edges())
         dbg("edges", edges)
-        nx.draw_networkx_edges(s.G, pos=s.pos, edgelist=edges, width=s.idx_weights[:len(edges)]
+        nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=edges, width=s.idx_weights[:len(edges)]
                                # ,
                                # ax=s.ax, arrowstyle='->',
                                # arrowsize=10
@@ -116,7 +128,72 @@ class VisualizationBase(object):
 
         # draw weights
         labels = nx.get_edge_attributes(s.G, 'weight')
-        nx.draw_networkx_edge_labels(s.G, s.pos, edge_labels=labels)
+        nx.draw_networkx_edge_labels(s.G, s.layout, edge_labels=labels)
+
+        # Scale plot ax
+        s.ax.set_xticks([])
+        s.ax.set_yticks([])
+        s.ax.set_title("Step #{} ".format(VisualizationBase.frameNo))
+
+        # self.plt.pause(5)
+        s.plt.pause(s.frameTimeout)
+        # self.plt.pause(3)
+        VisualizationBase.frameNo += 1
+
+
+    def updateSingle(s, edges=None):
+        if edges is None:
+            edges = list(list())
+        s.ax.clear()
+
+        # Background nodes
+        pprint(s.G.edges())
+        nx.draw_networkx_edges(s.G, pos=s.layout, ax=s.ax, edge_color="gray",
+                               # arrowstyle='->',
+                               arrowstyle='-|>',
+                               arrowsize=10
+                               )
+        forestNodes = list([item for sublist in (([l[0], l[1]]) for l in edges) for item in sublist])
+
+        # dbg("forestNodes", forestNodes)
+        forestNodes = list(filter(None, forestNodes))
+        # dbg("forestNodes -!None", forestNodes)
+        # dbg(set(self.G.nodes()))
+        null_nodes = nx.draw_networkx_nodes(s.G, pos=s.layout, nodelist=set(s.G.nodes()) - set(forestNodes),
+                                            node_color="white", ax=s.ax)
+        if (null_nodes is not None):
+            null_nodes.set_edgecolor("black")
+            nullNodesIds = set(s.G.nodes()) - set(forestNodes)
+            # dbg("nullNodes", nullNodes)
+            nx.draw_networkx_labels(s.G, pos=s.layout, labels=dict(zip(nullNodesIds, nullNodesIds)),
+                                    font_color="black",
+                                    ax=s.ax)
+
+        # Query nodes
+        s.idx_colors = sns.cubehelix_palette(len(forestNodes), start=.5, rot=-.75)[::-1]
+        query_nodes = nx.draw_networkx_nodes(s.G, pos=s.layout, nodelist=forestNodes,
+                                             node_color=s.idx_colors[:len(forestNodes)], ax=s.ax)
+        if query_nodes is not None:
+            query_nodes.set_edgecolor("white")
+        nx.draw_networkx_labels(s.G, pos=s.layout, labels=dict(zip(forestNodes, forestNodes)), font_color="white", ax=s.ax)
+
+        edges = list((l[0], l[1]) for l in edges)
+        # TODO refactor edge-has-none check -> default behaviour if forest is single node
+        # hasNone = edges is not None and (len(edges[0]) != 0 and len(edges[0][0]) != 0) and list(i if (i[0] is not None and i[1] is not None) else None for i in edges)[0] is not None
+        # hasEdge = (len(edges) > 0 and len(edges[0]) > 0)
+        # if hasEdge:
+        # dbg("edgelist", edges)
+        # dbg("self.G.edges()", self.G.edges())
+        dbg("edges", edges)
+        nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=edges, width=s.idx_weights[:len(edges)]
+                               # ,
+                               # ax=s.ax, arrowstyle='->',
+                               # arrowsize=10
+                               )
+
+        # draw weights
+        labels = nx.get_edge_attributes(s.G, 'weight')
+        nx.draw_networkx_edge_labels(s.G, s.layout, edge_labels=labels)
 
         # Scale plot ax
         s.ax.set_xticks([])
