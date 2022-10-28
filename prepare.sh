@@ -2,8 +2,8 @@
 
 user=$(echo $USER)
 postfix=""
-PYTHON_VERSION=3.7
-PYTHON_VERSION_SHORT=37
+PYTHON_VERSION=3.10
+PYTHON_VERSION_SHORT=310
 PYTHON_BIN=/usr/bin/python${PYTHON_VERSION}
 
 function usage {

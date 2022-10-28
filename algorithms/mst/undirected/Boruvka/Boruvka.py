@@ -85,7 +85,7 @@ class Boruvka(VisualizationBase):
                 parentSet = F[parentOfOuterVOfE]
                 F[parentOfInnerVOfE] = set(parentSet.union(F[parentOfInnerVOfE]))
                 """ Now it is necessary to update information about node's parents """
-                # TODO improve from O(n-1), idk is or is not this alternative to Boruvka with contractions?
+                # TODO improve from O(n-1), idk is or is not this alternative to Test with contractions?
                 for c in F[parentOfOuterVOfE]:
                     parents[c] = parentOfInnerVOfE
                 F.pop(parentOfOuterVOfE)

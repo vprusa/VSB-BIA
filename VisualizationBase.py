@@ -28,20 +28,23 @@ class VisualizationBase(object):
 
     def __init__(s, nxgraphType=None, nxgraphOptions=None, graphData=None, isDirected=False, frameTimeout=1):
         s.frameTimeout = frameTimeout
-        s.nxgraphType = nxgraphType
         s.nxgraphOptions = nxgraphOptions
-        s.graphData = graphData
         # nx.cubical_graph()
+        pprint("nxgraphType")
+        pprint(nxgraphType)
         if graphData is None:
             if nxgraphOptions is None:
+                # s.G = s.nxgraphType
                 s.G = getattr(nx, s.nxgraphType)()
             else:
+                s.nxgraphType = nxgraphType
                 s.G = getattr(nx, s.nxgraphType)(s.nxgraphOptions)
             if isDirected:
                 s.G = nx.to_directed(s.G)  # if already directed creates deep copy
             for (u, v, w) in s.G.edges(data=True):
                 w['weight'] = random.randint(0, 40)
         else:
+            s.graphData = graphData
             if isDirected:
                 s.G = nx.DiGraph()
                 s.G.add_edges_from(ast.literal_eval(s.graphData))

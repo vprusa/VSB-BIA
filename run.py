@@ -66,9 +66,9 @@ def run(args):
 """
 Exec:
 
-.virtenv/bin/python3 ./run.py --l MST --a Boruvka --g cubical_graph --kr 10
+.virtenv/bin/python3 ./run.py --l MST --a Test --g cubical_graph --kr 10
 
-.virtenv/bin/python3 ./run.py --l MST --a Boruvka --d \
+.virtenv/bin/python3 ./run.py --l MST --a Test --d \
 "[(0, 1, {'weight': 15}), (0, 3, {'weight': 34}), (0, 4, {'weight': 25}), (1, 2, {'weight': 5}), \
 (1, 7, {'weight': 23}), (2, 3, {'weight': 33}), (2, 6, {'weight': 29}), (3, 5, {'weight': 13}), \
 (4, 5, {'weight': 5}), (4, 7, {'weight': 20}), (5, 6, {'weight': 38}), (6, 7, {'weight': 3})]"
@@ -83,7 +83,7 @@ if __name__ == '__main__':
     try:
         args = parseArgs()
         print(args)
-        print("source .virtenv/bin/activate && python3 ./run.py --l MST --a Boruvka --g cubical_graph --kr 10")
+        print("source .virtenv/bin/activate && python3 ./run.py --l MST --a Test --g cubical_graph --kr 10")
     except:
         exc_info = sys.exc_info()
         pprint(exc_info)
