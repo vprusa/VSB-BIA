@@ -35,7 +35,8 @@ class VisualizationBase3D(object):
         s.plt = plt
 
         s.fig = plt.figure()
-        ax = plt.axes(projection='3d')
+        # ax1 = plt.axes(projection='3d')
+        ax = s.plt.axes(projection='3d')
 
         # Data for a three-dimensional line
         # zline = np.linspace(0, 15, 1000)
@@ -84,6 +85,22 @@ class VisualizationBase3D(object):
         ax.set_xlabel('x')
         ax.set_ylabel('y')
         ax.set_zlabel('z')
+
+        # ax2 = s.fig.add_subplot(projection='3d')
+
+        def randrange(n, vmin, vmax):
+            """
+            Helper function to make an array of random numbers having shape (n, )
+            with each number distributed Uniform(vmin, vmax).
+            """
+            return (vmax - vmin) * np.random.rand(n) + vmin
+        n = 100
+        for m, zlow, zhigh in [('o', -50, -25), ('^', -30, -5)]:
+            xs = randrange(n, 23, 32)
+            ys = randrange(n, 0, 100)
+            zs = randrange(n, zlow, zhigh)
+            ax.scatter(xs, ys, zs, marker=m)
+
         plt.show()
 
     def alg(self, G):
