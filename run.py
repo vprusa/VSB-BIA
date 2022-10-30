@@ -1,95 +1,103 @@
+import sys
 from pprint import pprint
+
+import numpy as np
 
 try:
     import seaborn as sns
-
     pass
 except UserWarning:
     pass
-import matplotlib.animation;
+import matplotlib.animation ; matplotlib.use("TkAgg")
 
-import sys
-import argparse
+from Vis3D import *
+
+# Vaším úkolem je naimplementovat vizualizaci prohledávání globálního minima v prostoru.
+# Vizualizaci proveďte nad funkcemi
+# Sphere, Schwefel, Rosenbrock, Rastrigin, Griewangk, Levy, Michalewicz, Zakharov, Ackley
+# https://www.sfu.ca/~ssurjano/optimization.html
+
+class Test(Vis3D):
+    def alg(s, dx, dy):
+        return None
+
+class Sphere(Vis3D):
+
+    def alg(s, dx, dy):
+        return (np.power(dx, 2) + (np.power(dy, 2)))
+
+class Schwefel(Vis3D):
+    """
+    Problematic, neads tweaking of params for generating next generation
+    """
+    plane = [-500, 500, 500]
+
+    c = 418.9829
+
+    def alg(s, dx, dy):
+        return (s.c * s.d - ( (dx * np.sin(np.sqrt(np.abs(dx))))) + (dy * np.sin(np.sqrt(np.abs(dy)))))
+
+class Rosenbrock(Vis3D):
+    def alg(s, dx, dy):
+        return (100 * np.power((dy - np.power(dx, 2)), 2) + np.power((dx - 1), 2))
+
+class Rastrigin(Vis3D):
+
+    plane = [-5, 5, 30]
+
+    c = 10
+
+    def alg(s, dx, dy):
+        def single(x):
+            return (np.power(x, 2) - s.c * np.cos(2 * np.pi * x))
+        return ((s.c * s.d ) + single(dx) + single(dy))
+
+class Griewangk(Vis3D):
+
+    def alg(s, dx, dy):
+        return None
+
+class Levy(Vis3D):
+
+    def alg(s, dx, dy):
+        return None
+
+class Michalewicz(Vis3D):
+
+    def alg(s, dx, dy):
+        return None
+
+class Zakharov(Vis3D):
+
+    def alg(s, dx, dy):
+        return None
+
+class Ackley(Vis3D):
+    a = 20
+    b = 0.2
+    c = 2 * np.pi
+    d = 2
+
+    def alg(s, xi, yi):
+        part1 = - s.a * np.exp((-s.b * np.sqrt((1.0 / s.d) * (np.power(xi, 2) + np.power(yi, 2)))))
+        part2 = - np.exp((1.0 / s.d) * (np.cos(s.c * xi) + np.cos(s.c * yi)))
+        return part1 + part2 + s.a + np.exp(1)
 
 
-def printHelp():
-    print("printHelp")
-    pass
+# while True:
+#
+# Sphere, Schwefel, Rosenbrock, Rastrigin, Griewangk, Levy, Michalewicz, Zakharov\nAckley
+# r = Ackley()
+# r = Rosenbrock()
 
+# r = Sphere()
+# r = Schwefel()
+# r = Rosenbrock()
+r = Rastrigin()
+# r = Griewangk()
+# r = Levy()
+# r = Michalewicz()
+# r = Zakharov()
+# r = Ackley()
 
-def parseArgs():
-    # Make parser object
-    p = argparse.ArgumentParser(description="""Args parser""", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-
-    p.add_argument("--algorithm", "--a", required=True, help="Use algorithm")
-    p.add_argument("--lecture", "--l", required=True, help="Algorithm from lecture")
-    p.add_argument("--keepRunning", "--kr", default=5, type=float, help="Keep visualization running")
-    p.add_argument("--frameTimeout", "--t", default=1, type=float, help="Visualization frame timeout")
-    p.add_argument("--directed", "--dir", action='store_true', help="Default Undirected graph")
-    # p.add_argument("-h", "--help", help="Prints help")
-
-    group1 = p.add_mutually_exclusive_group(required=True)
-    group1.add_argument("--graphData", "--d", help="Use defined graph")
-    group1.add_argument("--graph", "--g", help="Use networkx graph generation")
-    group1.add_argument("--graphOptions", "--go", required=False, help="Networkx graph options")
-    # group1.add_argument_group(nxgraphGroup)
-
-    return (p.parse_args())
-
-
-r = None
-globR = None
-
-
-def run(args):
-    matplotlib.use("TkAgg")
-
-    lecture = args.lecture.lower()
-    algName = args.algorithm
-    package = "algorithms." + lecture + "." + algName + "." + algName
-    name = algName
-    algClass = getattr(__import__(package, fromlist=[name]), name)
-    r = algClass(nxgraphType=args.graph, nxgraphOptions=args.graphOptions, graphData=args.graphData,
-                 isDirected=args.directed, frameTimeout=args.frameTimeout)
-    try:
-        print(r.G.edges(data=True))
-        r.alg(r.G)
-    except:
-        exc_info = sys.exc_info()
-        pprint(exc_info)
-        # r.plt.pause(args.keepRunning)
-    # exit(0)
-
-    pass
-
-
-"""
-Exec:
-
-.virtenv/bin/python3 ./run.py --l MST --a Test --g cubical_graph --kr 10
-
-.virtenv/bin/python3 ./run.py --l MST --a Test --d \
-"[(0, 1, {'weight': 15}), (0, 3, {'weight': 34}), (0, 4, {'weight': 25}), (1, 2, {'weight': 5}), \
-(1, 7, {'weight': 23}), (2, 3, {'weight': 33}), (2, 6, {'weight': 29}), (3, 5, {'weight': 13}), \
-(4, 5, {'weight': 5}), (4, 7, {'weight': 20}), (5, 6, {'weight': 38}), (6, 7, {'weight': 3})]"
-
-"""
-if __name__ == '__main__':
-    if sys.version_info < (3, 0, 0):
-        sys.stderr.write("You need python 3.0 or later to run this script\n")
-        sys.exit(1)
-
-    args = None
-    try:
-        args = parseArgs()
-        print(args)
-        print("source .virtenv/bin/activate && python3 ./run.py --l MST --a Test --g cubical_graph --kr 10")
-    except:
-        exc_info = sys.exc_info()
-        pprint(exc_info)
-        printHelp()
-
-    if args is not None:
-        run(args)
-
-    print()
+exit(0)

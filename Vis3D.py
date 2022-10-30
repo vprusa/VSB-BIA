@@ -57,6 +57,8 @@ class Vis3D(object):
     def __init__(s):
         Vis3D.plt = plt
 
+        s.d = len(s.plane) - 1
+
         if Vis3D.fig is None:
             Vis3D.fig = plt.figure()
         # else:
@@ -127,7 +129,7 @@ class Vis3D(object):
         pass
 
     def update(s):
-        dbg("edges", "XXX")
+        dbg("Iteration", Vis3D.frameNo)
         # Scale plot ax
         s.ax.set_xticks([])
         s.ax.set_yticks([])
