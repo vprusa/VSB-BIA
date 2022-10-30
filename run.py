@@ -53,24 +53,41 @@ class Rastrigin(Vis3D):
         return ((s.c * s.d ) + single(dx) + single(dy))
 
 class Griewangk(Vis3D):
-
+    # TODO
     def alg(s, dx, dy):
         return None
 
 class Levy(Vis3D):
 
     def alg(s, dx, dy):
-        return None
+        def wi(x):
+            return 1 + (x -1)/4
+        def single(x):
+            return np.power((wi(x) -1),2) (1+10*np.power(np.sin(np.pi * wi(x) + 1), 2))
+        return np.power(np.sin(np.pi * wi(dx)),2) + single(dx) + single(dy) + np.power(wi(dy)-1, 2)*(1+(np.power(np.sin(2*np.pi*wi(dy)),2)))
 
 class Michalewicz(Vis3D):
 
+    m = 10
+    plane = [0, 4, 30]
+
     def alg(s, dx, dy):
-        return None
+        def single(x, i):
+            return (np.sin(x)*np.power(np.sin((i*np.power(x,2))/np.pi),2*s.m))
+        return - (single(dx, 1) + single(dy,2))
 
 class Zakharov(Vis3D):
 
+    plane = [-10, 10, 30]
+
     def alg(s, dx, dy):
-        return None
+        def single1(x):
+            return np.power(x,2)
+        def single2(x, i):
+            return 0.5 * i * x
+        def single3(x, i):
+            return 0.5 * i * x
+        return single1(dx) + single1(dy) + np.power(single2(dx,1) + single2(dy,2),2) + np.power(single3(dx,1) + single3(dy,2),4)
 
 class Ackley(Vis3D):
     a = 20
@@ -93,11 +110,11 @@ class Ackley(Vis3D):
 # r = Sphere()
 # r = Schwefel()
 # r = Rosenbrock()
-r = Rastrigin()
+# r = Rastrigin()
 # r = Griewangk()
 # r = Levy()
 # r = Michalewicz()
-# r = Zakharov()
+r = Zakharov()
 # r = Ackley()
 
 exit(0)
