@@ -1,8 +1,3 @@
-import sys
-from pprint import pprint
-
-import numpy as np
-
 try:
     import seaborn as sns
     pass

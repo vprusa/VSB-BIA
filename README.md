@@ -11,6 +11,6 @@ It may be needed to install dependencies for visualization libraries, etc.
 Run:
 
 ```bash
-.virtenv-local/bin/python ./run.py
+.virtenv-local/bin/python ./run-1.py
 ```
 
