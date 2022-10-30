@@ -63,15 +63,11 @@ class Vis3D(object):
         if Vis3D.fig is None:
             Vis3D.fig = plt.figure("BIA - #1 - hill-climbing")
             Vis3D.plt.clf()
-        # else:
-        # VisualizationBase3D.fig.clear()
-        # s.ax.clear()
 
         ax = Vis3D.plt.axes(projection='3d')
         s.ax = ax
 
         s.vis_base()
-        # dz = ackley(dx, dy, a, b, c, d) + 1
 
         s.dx = np.random.choice(s.x, s.points_cnt)
         s.dy = np.random.choice(s.y, s.points_cnt)
@@ -81,7 +77,6 @@ class Vis3D(object):
         def next_rand(u):
             w = s.plane[1] - s.plane[0]
             return (((np.random.normal(0, 0.1, 1)[0] * (w)) + u) % (w/2))
-
 
 
         for i in range(1, s.max_iterations):
@@ -95,7 +90,7 @@ class Vis3D(object):
                 s.dx[xid] = tmpx
                 s.dy[xid] = tmpy
             # recalc for whole array, and add 3 because 'zorder' does not work
-            s.dz = s.alg(s.dx, s.dy)
+            s.dz = s.alg(s.dx, s.dy) # + 3
 
             s.ax.scatter(s.dx, s.dy, s.dz, marker='o', zorder=10, color="red")
             s.update()

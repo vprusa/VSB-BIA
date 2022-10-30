@@ -1,8 +1,16 @@
-# TODO
-- Create program that executes algorithms on sample data
-- visualization
-- complexity analyses
+# BIA - #1 - hill-climbing
+
+Install:
 
 ```bash
-.virtenv-local/bin/python ./run.py --l mst.undirected --a Test --g cubical_graph --kr 10
+sudo ./prepare.sh -u ${USER} -p local
 ```
+
+It may be needed to install dependencies for visualization libraries, etc.
+
+Run:
+
+```bash
+.virtenv-local/bin/python ./run.py
+```
+

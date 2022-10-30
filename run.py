@@ -111,10 +111,7 @@ class Ackley(Vis3D):
 
 
 # while True:
-#
 # Sphere, Schwefel, Rosenbrock, Rastrigin, Griewangk, Levy, Michalewicz, Zakharov, Ackley
-# r = Ackley()
-# r = Rosenbrock()
 
 r = Sphere()
 r = Schwefel()
@@ -125,5 +122,8 @@ r = Levy()
 r = Michalewicz()
 r = Zakharov()
 r = Ackley()
+
+# note: anything with spikes is problematic and playing parameters for
+#   generating next generation of neighbours might help
 
 exit(0)
