@@ -49,18 +49,20 @@ class Vis3D(object):
 
     plane = [-32, 32, 60]
     points_cnt = 100
-    max_iterations = 500
+    max_iterations = 100
 
     data = []
     data_old = []
 
     def __init__(s):
         Vis3D.plt = plt
+        Vis3D.frameNo = 0
 
         s.d = len(s.plane) - 1
 
         if Vis3D.fig is None:
-            Vis3D.fig = plt.figure()
+            Vis3D.fig = plt.figure("BIA - #1 - hill-climbing")
+            Vis3D.plt.clf()
         # else:
         # VisualizationBase3D.fig.clear()
         # s.ax.clear()
@@ -97,6 +99,10 @@ class Vis3D(object):
 
             s.ax.scatter(s.dx, s.dy, s.dz, marker='o', zorder=10, color="red")
             s.update()
+        # s.ax.set_title("")
+        # s.ax.clear()
+        s.plt.clf()
+
 
     def alg(s, dx, dy):
         # return ackley(dx, dy, s.a, s.b, s.c, s.d)
@@ -133,7 +139,7 @@ class Vis3D(object):
         # Scale plot ax
         s.ax.set_xticks([])
         s.ax.set_yticks([])
-        s.ax.set_title("Step #{} ".format(Vis3D.frameNo))
+        s.ax.set_title(s.__class__.__name__ + ": Step #{} ".format(Vis3D.frameNo))
 
         Vis3D.plt.pause(s.frameTimeout)
         Vis3D.frameNo += 1
