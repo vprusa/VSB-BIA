@@ -18,9 +18,8 @@ class Vis2D(object):
     frameNo = 0
     min_individual_price = 0
 
-    frameTimeout = 1
+    frameTimeout = 0.1
     # nxgraphType = "cubical_graph"
-    nxgraphType = "complete_graph"
     nxgraphOptions = None
     graphData = None
     G = None
@@ -42,10 +41,11 @@ class Vis2D(object):
     # NP = 20
     # G = 200
     # D = 20  # In TSP, it will be a number of cities
+    nxgraphType = "complete_graph"
 
-    NP = 2  # population cnt
-    GC = 10  # generation cnt
-    DC = 6  # In TSP, it will be a number of cities
+    NP = 20  # population cnt
+    GC = 200  # generation cnt
+    DC = 20  # In TSP, it will be a number of cities
 
     population = None
 
@@ -58,7 +58,7 @@ class Vis2D(object):
         if graphData is None:
             if nxgraphOptions is None:
                 if s.nxgraphType == "complete_graph":
-                    s.G = nx.complete_graph(6)
+                    s.G = nx.complete_graph(s.DC)
                 else:
                     s.G = getattr(nx, s.nxgraphType)()
             else:
@@ -88,39 +88,11 @@ class Vis2D(object):
         # s.layout = nx.planar_layout(s.G)
 
         # Build plot
-        s.fig, s.ax = s.plt.subplots(figsize=(6, 4))
+        s.fig, s.ax = s.plt.subplots(figsize=(10, 6))
 
         # s.g1 = next(nx.all_simple_paths(s.G, source=0, target=5))
 
         s.update()
-
-        # s.g1, s.e1 = s.gen_gen(list(s.G.nodes()), w=5.0, random=True)
-        # s.g2, s.e2 = s.gen_gen(list(s.G.nodes()), color='red', w=2.0, random=True)
-        # s.plt.pause(s.frameTimeout)
-
-        # s.g1p = s.price(s.g1)
-        # s.g2p = s.price(s.g2)
-        # list(map(lambda i: s.G.edges()[], s.g1))
-        # s.G[0][1]['weight']
-        # s.next_gen()
-
-        # TODO deal with whole populations ...
-        # for i in range(0, 5):
-        #     dbg("i", i)
-        #
-        #     g1p = s.price(s.g1)
-        #     g2p = s.price(s.g2)
-        #     if g1p > g2p:
-        #         s.g1 = s.g2
-        #         s.e1 = s.e2
-        #         # TODO next gen arr
-        #
-        #     s.update()
-        #
-        #     s.g1, s.e1 = s.gen_gen(s.g1, w=5.0)
-        #     s.g2, s.e2 = s.gen_gen(s.g2, color='red', w=2.0)
-        #
-        #     s.plt.pause(s.frameTimeout)
 
         # NP = 2
         # GC = 2
@@ -156,17 +128,9 @@ class Vis2D(object):
             s.show_min_path(color='green')
 
         s.show_min_path(color='red')
+        s.plt.pause(5)
 
-        # s.update()
-        # s.g1 = list(s.G.nodes())
-        # s.random_circle(s.g1)
-        # s.g11 = list(map(lambda i: list(s.G.edges())[i], s.g1))
-        # s.e1 = s.get_edges(s.g1)
-        # for e in s.e1:
-        #     nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=e, width=s.idx_weights[:len(s.g1)], ax=s.ax, arrows=True, arrowstyle='-|>', arrowsize=10)
-        # s.plt.pause(s.frameTimeout)
 
-        # s.update()
     def f(s, i):
         return s.price(i)
 
@@ -204,36 +168,12 @@ class Vis2D(object):
                 nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=e, width=ew, ax=s.ax, arrowstyle=ars, arrows=True, edge_color=color)
         return ga
 
-    def gen_gen(s, gs, ars='->', color='k', w=None, draw=True, random=False):
-        ga = gs
-        if not random:
-            s.random_circle(ga)
-        ea = s.get_edges(ga)
-        if draw:
-            for e in ea:
-                if w == None:
-                    ew = w
-                else:
-                    ew = s.idx_weights[:len(ga)]
-                nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=e, width=ew, ax=s.ax, arrowstyle=ars, arrows=True, edge_color=color)
-        return ga, ea
-
     def price(s, g):
         sum = 0
         for i in range(0, len(g) - 2):
             sum = sum + s.G[g[i]][g[i + 1]]['weight']
         return sum
 
-
-    def next_gen(s):
-        s.g1 = list(s.G.nodes())
-        s.random_circle(s.g1)
-        s.g11 = list(map(lambda i: list(s.G.edges())[i], s.g1))
-        s.e1 = s.get_edges(s.g1)
-        for e in s.e1:
-            nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=e, width=s.idx_weights[:len(s.g1)], ax=s.ax, arrows=True, arrowstyle='-|>', arrowsize=10)
-        s.update()
-        s.plt.pause(s.frameTimeout)
 
     def alg(self, G):
         pass
@@ -338,6 +278,6 @@ class Vis2D(object):
         s.ax.set_title("Step #{}, Price: {}".format(Vis2D.frameNo, Vis2D.min_individual_price))
 
         # self.plt.pause(5)
-        s.plt.pause(s.frameTimeout)
+        # s.plt.pause(s.frameTimeout)
         # self.plt.pause(3)
         Vis2D.frameNo += 1
