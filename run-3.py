@@ -8,13 +8,11 @@ import matplotlib.animation ; matplotlib.use("TkAgg")
 from Vis2D import *
 
 # 3. Genetic algorithm used to solve Traveling Salesman Problem (TSP) (8 p)
+class TSP(Vis2D):
+    pass
 
-class Test(Vis2D):
-    def alg(s):
-        # return super.alg()
-        return None
-
-r = Test()
+r = TSP()
+r.alg()
 
 
 exit(0)

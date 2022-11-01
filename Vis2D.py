@@ -87,12 +87,64 @@ class Vis2D(object):
         s.ax = s.plt.axes()
         # s.fig = plt.figure()
         s.update()
-        s.plt.pause(3)
+        # s.plt.pause(3)
 
-        # NP = 2
-        # GC = 2
-        # D = 6  # In TSP, it will be a number
 
+
+    def f(s, i):
+        return s.price(i)
+
+    def copy_pop(s,g):
+        return g.copy()
+
+    def crossover(s,i1, i2):
+        i3 = i1.copy()
+        for i in range(0, len(i1)-1):
+            if bool(random.getrandbits(1)):
+                # due to the way the data structures are used I cannot simply merge some nodes together
+                # because it would lead tu duplicate elements, so I deal with it by
+                # swapping elements according to parent nodes on given position and so the
+                # offspring has nodes ordered according to both parents
+                # this is not a mutation because I need information from both parents to do this
+                offspring_i = i3.index(i2[i])
+                i3[i], i3[offspring_i] = i3[offspring_i], i3[i]
+        return i3
+
+    def show_min_path(s, color='blue'):
+        # eval final population
+        s.min_individual = s.population[0]
+        Vis2D.min_individual_price = s.f(s.min_individual)
+        for i in range(1, len(s.population)):
+            price = s.f(s.population[i])
+            if (Vis2D.min_individual_price > price):
+                s.min_individual = s.population[i]
+                Vis2D.min_individual_price = price
+        s.update()
+        s.show_path(s.min_individual, color=color, w=1)
+        s.plt.pause(s.frameTimeout)
+
+    # def mutate(s,i1):
+    #     return i1
+
+    def show_path(s, ga, ars = '->', color = 'k', w = None, draw = True):
+        ea = s.get_edges(ga)
+        if draw:
+            for e in ea:
+                if w == None:
+                    ew = w
+                else:
+                    ew = s.idx_weights[:len(ga)]
+                nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=e, width=ew, ax=s.ax, arrowstyle=ars, arrows=True, edge_color=color)
+        return ga
+
+    def price(s, g):
+        sum = 0
+        for i in range(0, len(g) - 2):
+            sum = sum + s.G[g[i]][g[i + 1]]['weight']
+        return sum
+
+
+    def alg(s):
         # population = Generate NP random individuals Evaluate individuals within population
         s.population = list()
         for i in range(0, s.NP):
@@ -124,55 +176,7 @@ class Vis2D(object):
 
         s.show_min_path(color='red')
         s.plt.pause(10)
-
-
-    def f(s, i):
-        return s.price(i)
-
-    def copy_pop(s,g):
-        return g.copy()
-
-    def crossover(s,i1, i2):
-        return i1
-
-    def show_min_path(s, color='blue'):
-        # eval final population
-        s.min_individual = s.population[0]
-        Vis2D.min_individual_price = s.f(s.min_individual)
-        for i in range(1, len(s.population)):
-            price = s.f(s.population[i])
-            if (Vis2D.min_individual_price > price):
-                s.min_individual = s.population[i]
-                Vis2D.min_individual_price = price
-        s.update()
-        s.show_path(s.min_individual, color=color, w=1)
-        s.plt.pause(s.frameTimeout)
-
-    # def mutate(s,i1):
-    #     return i1
-
-    def show_path(s, ga, ars = '->', color = 'k', w = None, draw = True):
-        # gen_gen(s, gs, ars='->', color='k', w=None, draw=True, random=False):
-        ea = s.get_edges(ga)
-        if draw:
-            for e in ea:
-                if w == None:
-                    ew = w
-                else:
-                    ew = s.idx_weights[:len(ga)]
-                nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=e, width=ew, ax=s.ax, arrowstyle=ars, arrows=True, edge_color=color)
-        return ga
-
-    def price(s, g):
-        sum = 0
-        for i in range(0, len(g) - 2):
-            sum = sum + s.G[g[i]][g[i + 1]]['weight']
-        return sum
-
-
-    def alg(self, G):
         pass
-        # alg(self, G) should have algorithm-required inputs as parameters
 
     def get_edges(s, nodes):
         edges = list()
