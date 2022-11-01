@@ -69,33 +69,36 @@ class Vis2D(object):
                 s.G = getattr(nx, s.nxgraphType)(s.nxgraphOptions)
         else:
             s.G = nx.from_edgelist(ast.literal_eval(s.graphData))
+        # generates random weights to graph
         for (u, v, w) in s.G.edges(data=True):
             w['weight'] = random.randint(1, 40)
+
+        # or load graph with weights them directly...
         # s.G = nx.from_edgelist(list(
         #     [(0, 1, {'weight': 15}), (0, 3, {'weight': 34}), (0, 4, {'weight': 25}), (1, 2, {'weight': 5}),
         #      (1, 7, {'weight': 23}), (2, 3, {'weight': 33}), (2, 6, {'weight': 29}), (3, 5, {'weight': 13}),
         #      (4, 5, {'weight': 5}), (4, 7, {'weight': 20}), (5, 6, {'weight': 38}), (6, 7, {'weight': 3})]
         #     ))
+
+        # Build plot
         s.plt = plt
 
         s.idx_weights = range(2, 30, 1)
 
         s.layout = nx.circular_layout(s.G)
-
-        # Build plot
         s.fig = s.plt.figure("BIA - #3 - Genetic alg. on Traveling Salesman Problem (TSP) ", figsize=s.figsize)
         s.ax = s.plt.axes()
-        # s.fig = plt.figure()
         s.update()
-        # s.plt.pause(3)
-
+        s.plt.pause(3)
 
 
     def f(s, i):
+        """
+            price function, idk why it is called 'f()' in this case,
+            but for sake of balancing readeability and documentation
+            I use internal function 'price()' (note: should I rename to 'cost()'?)
+        """
         return s.price(i)
-
-    def copy_pop(s,g):
-        return g.copy()
 
     def crossover(s,i1, i2):
         i3 = i1.copy()
@@ -123,9 +126,6 @@ class Vis2D(object):
         s.show_path(s.min_individual, color=color, w=1)
         s.plt.pause(s.frameTimeout)
 
-    # def mutate(s,i1):
-    #     return i1
-
     def show_path(s, ga, ars = '->', color = 'k', w = None, draw = True):
         ea = s.get_edges(ga)
         if draw:
@@ -143,8 +143,10 @@ class Vis2D(object):
             sum = sum + s.G[g[i]][g[i + 1]]['weight']
         return sum
 
-
     def alg(s):
+        """
+            Genetic alg. for solving TSP
+        """
         # population = Generate NP random individuals Evaluate individuals within population
         s.population = list()
         for i in range(0, s.NP):
@@ -205,16 +207,10 @@ class Vis2D(object):
             swapped[pos1], swapped[pos2] = swapped[pos2], swapped[pos1]
         return swapped
 
-    def mix_circles(s, n1, n2):
-        res = list()
-        for i in range(0, len(n1)-1):
-            if bool(random.getrandbits(1)):
-                res[i] = n1[i]
-            else:
-                res[i] = n2[i]
-        return res
-
     def update(s, edges=None):
+        """
+        clear and update default network
+        """
         if edges is None:
             edges = list(list())
         s.ax.clear()
@@ -262,9 +258,7 @@ class Vis2D(object):
         edges = list((l[0], l[1]) for l in edges)
         dbg("edges", edges)
         nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=edges, width=s.idx_weights[:len(edges)]
-                               # ,
-                               # ax=s.ax, arrowstyle='->',
-                               # arrowsize=10
+                               # , ax=s.ax, arrowstyle='->', arrowsize=10
                                )
 
         # draw weights
