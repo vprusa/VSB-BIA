@@ -46,6 +46,11 @@ class Vis2D(object):
     NP = 20  # population cnt
     GC = 200  # generation cnt
     DC = 20  # In TSP, it will be a number of cities
+    figsize = (10, 6)
+    # NP = 20  # population cnt
+    # GC = 40  # generation cnt
+    # DC = 8  # In TSP, it will be a number of cities
+    # figsize = (6, 4)
 
     population = None
 
@@ -54,7 +59,6 @@ class Vis2D(object):
             s.nxgraphType = nxgraphType
         s.nxgraphOptions = nxgraphOptions
         s.graphData = graphData
-        # nx.cubical_graph()
         if graphData is None:
             if nxgraphOptions is None:
                 if s.nxgraphType == "complete_graph":
@@ -73,26 +77,17 @@ class Vis2D(object):
         #      (4, 5, {'weight': 5}), (4, 7, {'weight': 20}), (5, 6, {'weight': 38}), (6, 7, {'weight': 3})]
         #     ))
         s.plt = plt
-        s.idx_weights = range(2, 30, 1)
-        # lets hardcode smth for now
-        # TODO elif (len(list(s.G.nodes())) == 8):
-        # posIn = {}
-        # if (len(list(s.G.nodes())) == 6):
-        #     posIn = dict({0: (0, 0), 1: (1, 0), 2: (2, 0), 3: (0, -1), 4: (1, -1), 5: (2, -1)})
-        # else:
-        # for i in list(s.G.nodes()):
-        #     posIn[i] = (i * 5, -i * 5)
 
-        # s.layout = nx.spring_layout(s.G, pos=posIn, fixed=s.G.nodes())
+        s.idx_weights = range(2, 30, 1)
+
         s.layout = nx.circular_layout(s.G)
-        # s.layout = nx.planar_layout(s.G)
 
         # Build plot
-        s.fig, s.ax = s.plt.subplots(figsize=(10, 6))
-
-        # s.g1 = next(nx.all_simple_paths(s.G, source=0, target=5))
-
+        s.fig = s.plt.figure("BIA - #3 - Genetic alg. on Traveling Salesman Problem (TSP) ", figsize=s.figsize)
+        s.ax = s.plt.axes()
+        # s.fig = plt.figure()
         s.update()
+        s.plt.pause(3)
 
         # NP = 2
         # GC = 2
@@ -128,7 +123,7 @@ class Vis2D(object):
             s.show_min_path(color='green')
 
         s.show_min_path(color='red')
-        s.plt.pause(5)
+        s.plt.pause(10)
 
 
     def f(s, i):
@@ -275,7 +270,9 @@ class Vis2D(object):
         # Scale plot ax
         s.ax.set_xticks([])
         s.ax.set_yticks([])
-        s.ax.set_title("Step #{}, Price: {}".format(Vis2D.frameNo, Vis2D.min_individual_price))
+
+        # s.ax.set_title("Step #{}, Price: {}".format(Vis2D.frameNo, Vis2D.min_individual_price))
+        s.ax.set_title("Step #{}, NP: {}, GC {}, DC: {}, Price: {}".format(Vis2D.frameNo,Vis2D.NP,Vis2D.GC,Vis2D.DC, Vis2D.min_individual_price))
 
         # self.plt.pause(5)
         # s.plt.pause(s.frameTimeout)
