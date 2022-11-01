@@ -153,7 +153,7 @@ class Vis2D(object):
             s.population.append(s.random_circle(list(s.G.nodes())))
 
         for i in range(0, s.GC):
-            s.new_population = s.copy_pop(s.population)  # Offspring is always put to a new population
+            s.new_population = s.population.copy()  # Offspring is always put to a new population
 
             for j in range(0, s.NP-1):
                 parent_A = s.population[j]
