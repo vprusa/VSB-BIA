@@ -2,6 +2,7 @@ import networkx as nx
 from pprint import pprint
 import random
 import matplotlib.pyplot as plt
+import numpy as np
 from base import *
 import ast
 
@@ -35,6 +36,8 @@ class Vis2D(object):
     pop_cnt = 10
     cg = list(list())
     ng = list(list())
+
+    distances = (0,500)
 
     start_node = 0
 
@@ -70,8 +73,14 @@ class Vis2D(object):
         else:
             s.G = nx.from_edgelist(ast.literal_eval(s.graphData))
         # generates random weights to graph
+        for (u, v) in s.G.nodes(data=True):
+            v['pos'] = (random.randint(s.distances[0], s.distances[1]), random.randint(s.distances[0], s.distances[1]))
         for (u, v, w) in s.G.edges(data=True):
-            w['weight'] = random.randint(1, 40)
+            # w['weight'] = (random.randint(1, 40))
+            u1 = s.G.nodes()[u]['pos']
+            v1 = s.G.nodes()[v]['pos']
+            real_dist = np.sqrt(np.power(u1[0]-v1[0], 2) + np.power(u1[1]-v1[1], 2))
+            w['weight'] = int(real_dist)
 
         # or load graph with weights them directly...
         # s.G = nx.from_edgelist(list(
@@ -81,15 +90,44 @@ class Vis2D(object):
         #     ))
 
         # Build plot
-        s.plt = plt
+        # s.plt = plt
+        # # s.fig, s.ax = plt.fig("BIA - #3 - Genetic alg. on Traveling Salesman Problem (TSP) ", figsize=s.figsize)
+        # # s.fig, s.ax = plt.subplots()
+        # # s.fig, s.ax = plt.subplots()
+        # s.idx_weights = range(2, 30, 1)
+        #
+        # # s.layout = nx.circular_layout(s.G)
+        # # list(map(lambda x: x[1]['pos'],s.G.nodes(data=True)))
+        # pos = {point: point for point in list(map(lambda x: x[1]['pos'],s.G.nodes(data=True)))}
+        # s.layout = list(pos)
+        # s.fig = s.plt.figure("BIA - #3 - Genetic alg. on Traveling Salesman Problem (TSP) ", figsize=s.figsize)
+        # # s.fig.set_title("BIA - #3 - Genetic alg. on Traveling Salesman Problem (TSP) ")
+        # s.ax = s.plt.axes()
+        # # s.plt.axis("on")
+        # s.ax.set_xlim(s.distances[0], s.distances[1])
+        # s.ax.set_ylim(s.distances[0], s.distances[1])
+        # s.ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
 
+        s.plt = plt
+        # s.fig, s.ax = plt.fig("BIA - #3 - Genetic alg. on Traveling Salesman Problem (TSP) ", figsize=s.figsize)
+        s.fig, s.ax = plt.subplots()
+        # s.fig, s.ax = plt.subplots()
         s.idx_weights = range(2, 30, 1)
 
-        s.layout = nx.circular_layout(s.G)
-        s.fig = s.plt.figure("BIA - #3 - Genetic alg. on Traveling Salesman Problem (TSP) ", figsize=s.figsize)
-        s.ax = s.plt.axes()
+        # s.layout = nx.circular_layout(s.G)
+        # list(map(lambda x: x[1]['pos'],s.G.nodes(data=True)))
+        pos = {point: point for point in list(map(lambda x: x[1]['pos'], s.G.nodes(data=True)))}
+        s.layout = list(pos)
+        # s.fig = s.plt.figure("BIA - #3 - Genetic alg. on Traveling Salesman Problem (TSP) ", figsize=s.figsize)
+        # s.fig.set_title("BIA - #3 - Genetic alg. on Traveling Salesman Problem (TSP) ")
+        # s.ax = s.plt.axes()
+        # s.plt.axis("on")
+        s.ax.set_xlim(s.distances[0], s.distances[1])
+        s.ax.set_ylim(s.distances[0], s.distances[1])
+        s.ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
+
         s.update()
-        s.plt.pause(3)
+        # s.plt.pause(3)
 
 
     def f(s, i):
@@ -133,8 +171,10 @@ class Vis2D(object):
                 if w == None:
                     ew = w
                 else:
-                    ew = s.idx_weights[:len(ga)]
-                nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=e, width=ew, ax=s.ax, arrowstyle=ars, arrows=True, edge_color=color)
+                    # ew = s.idx_weights[:len(ga)]
+                    ew = 1
+                nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=e, width=ew, arrowstyle=ars, arrows=True, edge_color=color)
+                s.show_axes()
         return ga
 
     def price(s, g):
@@ -214,14 +254,11 @@ class Vis2D(object):
         if edges is None:
             edges = list(list())
         s.ax.clear()
+        s.show_axes()
 
         # Background nodes
         pprint(s.G.edges())
-        nx.draw_networkx_edges(s.G, pos=s.layout, ax=s.ax, edge_color="gray",
-                               # arrowstyle='->',
-                               arrowstyle='-|>',
-                               arrowsize=10
-                               )
+        nx.draw_networkx_edges(s.G, pos=s.layout, edge_color="gray", arrowstyle='-|>', arrowsize=10)
         forestNodes = list([item for sublist in (([l[0], l[1]]) for l in edges) for item in sublist])
 
         # dbg("forestNodes", forestNodes)
@@ -266,13 +303,18 @@ class Vis2D(object):
         nx.draw_networkx_edge_labels(s.G, s.layout, edge_labels=labels)
 
         # Scale plot ax
-        s.ax.set_xticks([])
-        s.ax.set_yticks([])
+        # s.ax.set_xticks([])
+        # s.ax.set_yticks([])
 
         # s.ax.set_title("Step #{}, Price: {}".format(Vis2D.frameNo, Vis2D.min_individual_price))
         s.ax.set_title("Step #{}, NP: {}, GC {}, DC: {}, Price: {}".format(Vis2D.frameNo,Vis2D.NP,Vis2D.GC,Vis2D.DC, Vis2D.min_individual_price))
+        s.show_axes()
 
         # self.plt.pause(5)
         # s.plt.pause(s.frameTimeout)
         # self.plt.pause(3)
         Vis2D.frameNo += 1
+    def show_axes(s):
+        s.ax.set_xlim(s.distances[0]-(s.distances[1]*0.1), s.distances[1]+(s.distances[1]*0.1))
+        s.ax.set_ylim(s.distances[0]-(s.distances[1]*0.1), s.distances[1]+(s.distances[1]*0.1))
+        s.ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
