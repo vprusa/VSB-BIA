@@ -47,7 +47,6 @@ import matplotlib.animation ; matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 
 
-
 def ackley(xi, yi, a, b, c, d):
     part1 = - a * np.exp((-b * np.sqrt((1.0 / d) * (np.power(xi, 2) + np.power(yi, 2)))))
     part2 = - np.exp((1.0 / d) * (np.cos(c * xi) + np.cos(c * yi)))
@@ -62,29 +61,15 @@ class Vis3D4(object):
 
     frameTimeout = 0.5
     nxgraphOptions = None
-    graphData = None
     G = None
     D = None
     plt = None
     layout = None
     fig = None
-    ax = None
-
-    x = None
-    y = None
-    z = None
-
-    X = None
-    Y = None
-    Z = None
 
     dx = None
     dy = None
     dz = None
-
-    ndx = None
-    ndy = None
-    ndz = None
 
     dims = 2
     plane = [-32, 32, 60]
@@ -97,7 +82,7 @@ class Vis3D4(object):
     d = 2
 
     g = 0
-    g_maxim = 10
+    g_maxim = 20
 
     F = 0.5
     cr = 0.7
@@ -116,36 +101,15 @@ class Vis3D4(object):
         s.ax = ax
 
         s.vis_base()
+        Vis3D4.plt.pause(3)
 
         s.dx = np.random.choice(s.x, s.points_cnt)
         s.dy = np.random.choice(s.y, s.points_cnt)
         s.dz = ackley(s.dx, s.dy, s.a, s.b, s.c, s.d) + (Vis3D4.frameNo * 5)
         s.ax.scatter(s.dx, s.dy, s.dz, marker='o')
 
-        def next_rand(u):
-            w = s.plane[1] - s.plane[0]
-            return (((np.random.normal(0, 0.1, 1)[0] * (w)) + u) % (w/2))
-
         # https://aicorespot.io/differential-evolution-from-the-ground-up-in-python/
         # reasonably documented code is here
-
-        # for i in range(1, s.max_iterations):
-        #     s.ax.clear()
-        #     s.vis_base()
-        #
-        #     s.ndx = next_rand(s.dx)
-        #     s.ndy = next_rand(s.dy)
-        #     for xid in range(s.dx.shape[0]):  # for each x-axis
-        #         tmpx, tmpy = s.cmp(s.dx[xid], s.dy[xid], s.ndx[xid], s.ndy[xid])
-        #         s.dx[xid] = tmpx
-        #         s.dy[xid] = tmpy
-        #     # recalc for whole array, and add 3 because 'zorder' does not work
-        #     s.dz = s.alg(s.dx, s.dy) # + 3
-        #
-        #     s.ax.scatter(s.dx, s.dy, s.dz, marker='o', zorder=10, color="red")
-        #     s.update()
-        # s.ax.set_title("")
-        # s.ax.clear()
 
         # pop = Generate NP random individuals(you can use the class Solution mentioned in Exercise 1)
         s.pop = [(s.dx[i], s.dy[i]) for i in range(0, len(s.dx))]
@@ -195,7 +159,8 @@ class Vis3D4(object):
             s.ax.scatter(s.dx, s.dy, s.dz, marker='o', zorder=10, color="red")
 
             s.update()
-        s.g = s.g + 1
+            s.g = s.g + 1
+        Vis3D4.plt.pause(5)
 
         s.plt.clf()
 
