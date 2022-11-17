@@ -89,24 +89,6 @@ class Vis2D(object):
         #      (4, 5, {'weight': 5}), (4, 7, {'weight': 20}), (5, 6, {'weight': 38}), (6, 7, {'weight': 3})]
         #     ))
 
-        # Build plot
-        # s.plt = plt
-        # # s.fig, s.ax = plt.fig("BIA - #3 - Genetic alg. on Traveling Salesman Problem (TSP) ", figsize=s.figsize)
-        # # s.fig, s.ax = plt.subplots()
-        # # s.fig, s.ax = plt.subplots()
-        # s.idx_weights = range(2, 30, 1)
-        #
-        # # s.layout = nx.circular_layout(s.G)
-        # # list(map(lambda x: x[1]['pos'],s.G.nodes(data=True)))
-        # pos = {point: point for point in list(map(lambda x: x[1]['pos'],s.G.nodes(data=True)))}
-        # s.layout = list(pos)
-        # s.fig = s.plt.figure("BIA - #3 - Genetic alg. on Traveling Salesman Problem (TSP) ", figsize=s.figsize)
-        # # s.fig.set_title("BIA - #3 - Genetic alg. on Traveling Salesman Problem (TSP) ")
-        # s.ax = s.plt.axes()
-        # # s.plt.axis("on")
-        # s.ax.set_xlim(s.distances[0], s.distances[1])
-        # s.ax.set_ylim(s.distances[0], s.distances[1])
-        # s.ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
 
         s.plt = plt
         # s.fig, s.ax = plt.fig("BIA - #3 - Genetic alg. on Traveling Salesman Problem (TSP) ", figsize=s.figsize)
@@ -258,7 +240,7 @@ class Vis2D(object):
 
         # Background nodes
         pprint(s.G.edges())
-        nx.draw_networkx_edges(s.G, pos=s.layout, edge_color="gray", arrowstyle='-|>', arrowsize=10)
+        # nx.draw_networkx_edges(s.G, pos=s.layout, edge_color="gray", arrowstyle='-|>', arrowsize=10)
         forestNodes = list([item for sublist in (([l[0], l[1]]) for l in edges) for item in sublist])
 
         # dbg("forestNodes", forestNodes)
@@ -294,13 +276,11 @@ class Vis2D(object):
 
         edges = list((l[0], l[1]) for l in edges)
         dbg("edges", edges)
-        nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=edges, width=s.idx_weights[:len(edges)]
-                               # , ax=s.ax, arrowstyle='->', arrowsize=10
-                               )
+        # nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=edges, width=s.idx_weights[:len(edges)] ) # , ax=s.ax, arrowstyle='->', arrowsize=10
 
         # draw weights
         labels = nx.get_edge_attributes(s.G, 'weight')
-        nx.draw_networkx_edge_labels(s.G, s.layout, edge_labels=labels)
+        # nx.draw_networkx_edge_labels(s.G, s.layout, edge_labels=labels)
 
         # Scale plot ax
         # s.ax.set_xticks([])

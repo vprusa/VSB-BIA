@@ -46,11 +46,23 @@ import matplotlib.animation ; matplotlib.use("TkAgg")
 
 import matplotlib.pyplot as plt
 
+def ackley(dx, dy, a, b, c, d):
+    # part1 = - a * np.exp((-b * np.sqrt((1.0 / d) * (np.power(xi, 2) + np.power(yi, 2)))))
+    # part2 = - np.exp((1.0 / d) * (np.cos(c * xi) + np.cos(c * yi)))
+    # return part1 + part2 + a + np.exp(1)
+    # return (100 * np.power((xi - np.power(yi, 2)), 2) + np.power((yi - 1), 2))
+    # plane = [-10, 10, 30]
 
-def ackley(xi, yi, a, b, c, d):
-    part1 = - a * np.exp((-b * np.sqrt((1.0 / d) * (np.power(xi, 2) + np.power(yi, 2)))))
-    part2 = - np.exp((1.0 / d) * (np.cos(c * xi) + np.cos(c * yi)))
-    return part1 + part2 + a + np.exp(1)
+    # def alg(s, dx, dy):
+    def single1(x):
+        return np.power(x,2)
+    def single2(x, i):
+        return 0.5 * i * x
+    def single3(x, i):
+        return 0.5 * i * x
+    return single1(dx) + single1(dy) + np.power(single2(dx,1) + single2(dy,2),2) + np.power(single3(dx,1) + single3(dy,2),4)
+
+
 
 def f(xi, xi1):
     # Rosenbrock Function
