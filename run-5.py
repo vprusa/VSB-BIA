@@ -77,6 +77,7 @@ class Vis3D(object):
 
         ax = Vis3D.plt.axes(projection='3d')
         s.ax = ax
+        s.ax.view_init(elev=270., azim=0)
         s.vis_base()
         s.update()
 
@@ -89,7 +90,7 @@ class Vis3D(object):
         s.gen_vel(s.swarm)
         s.m = 0
         s.M_max = s.max_iterations
-        s.updatev()
+        s.updatev(1)
         Vis3D.plt.pause(1)
 
         # while m < M_max :
@@ -151,7 +152,8 @@ class Vis3D(object):
         s.X, s.Y = np.meshgrid(s.x, s.y)
         s.Z = s.alg(s.X, s.Y)
 
-        s.ax.plot_wireframe(s.X, s.Y, s.Z, cmap="coolwarm", zorder=1, linewidth=1)
+        # s.ax.plot_wireframe(s.X, s.Y, s.Z, cmap="coolwarm", zorder=1, linewidth=1)
+        s.ax.plot_surface(s.X, s.Y, s.Z, cmap="coolwarm", zorder=1, linewidth=1)
         s.ax.set_xlabel('x')
         s.ax.set_ylabel('y')
         s.ax.set_zlabel('z')
@@ -170,8 +172,8 @@ class Vis3D(object):
         Vis3D.plt.pause(s.frameTimeout)
         Vis3D.frameNo += 1
 
-    def updatev(s):
-        zoffset = 0
+    def updatev(s, idx = 0):
+        zoffset = -10
         s.dx = list(map(lambda i: i.x, s.swarm))
         s.dy = list(map(lambda i: i.y, s.swarm))
         s.dz = list(map(lambda i: i.z + zoffset, s.swarm))
@@ -179,12 +181,12 @@ class Vis3D(object):
         s.ny = list(map(lambda i: i.ny, s.swarm))
         s.nz = list(map(lambda i: i.nz + zoffset, s.swarm))
         s.ax.scatter(s.dx, s.dy, s.dz, marker='.', color="red")
-        s.ax.scatter(s.gb.x, s.gb.y, s.gb.z, marker='o', color="green")
         i = 0
-        for x in s.dx:
-            if s.nz[i] != 0:
-                s.ax.plot([s.dx[i], s.nx[i]], [s.dy[i], s.ny[i]], zs=[s.dz[i], s.nz[i]])
-            i = i + 1
+        if idx == 0:
+            for x in s.dx:
+                s.ax.plot([s.dx[i], s.nx[i]], [s.dy[i], s.ny[i]], zs=[s.dz[i], s.nz[i]], color="red", linewidth=1)
+                i = i + 1
+        s.ax.scatter(s.gb.x, s.gb.y, s.gb.z + zoffset, marker='o', color="green")
         s.sleep()
 
     wc = 0.1
@@ -283,8 +285,8 @@ class Schwefel(Vis3D):
     """
     plane = [-500, 500, 500]
     max_iterations = 100
-    # v_max = 50
-    # v_mult = 30
+    v_max = 50
+    v_mult = 30
 
     c = 418.9829
 
@@ -349,6 +351,8 @@ class Zakharov(Vis3D):
 
     plane = [-10, 10, 30]
 
+    max_iterations = 30
+
     def alg(s, dx, dy):
         def f1(x):
             return np.power(x, 2)
@@ -365,6 +369,8 @@ class Ackley(Vis3D):
     b = 0.2
     c = 2 * np.pi
     d = 2
+
+    max_iterations = 50
 
     def alg(s, xi, yi):
         part1 = - s.a * np.exp((-s.b * np.sqrt((1.0 / s.d) * (np.power(xi, 2) + np.power(yi, 2)))))
