@@ -121,9 +121,9 @@ class Vis3D(object):
         # s.gbv = s.gen_vel(s.swarm)
         s.gen_vel(s.swarm)
         s.m = 0
-        s.M_max = 70
+        s.M_max = 35
         s.updatev(1)
-        Vis3D.plt.pause(2)
+        Vis3D.plt.pause(1)
 
         # while m < M_max :
         while s.m < s.M_max:
@@ -419,6 +419,8 @@ class Ackley(Vis3D):
 
 # while True:
 # Sphere, Schwefel, Rosenbrock, Rastrigin, Griewangk, Levy, Michalewicz, Zakharov, Ackley
+
+plt.pause(2)
 
 r = Sphere()
 r = Schwefel()
