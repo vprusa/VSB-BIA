@@ -90,5 +90,10 @@ Run:
 ![./5.2.gif](./5.2.gif)
 ![./5.3.gif](./5.3.gif)
 
+
+## 6
+
+![./6.gif](./6.gif)
+
 Note:
 https://github.com/vprusa/VSB-BIA/tree/devel
