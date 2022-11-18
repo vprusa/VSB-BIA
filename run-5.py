@@ -131,7 +131,7 @@ class Vis2D5(object):
         # s.gbv = s.gen_vel(s.swarm)
         s.gen_vel(s.swarm)
         s.m = 0
-        s.M_max = 10
+        s.M_max = 100
 
         # while m < M_max :
         while s.m < s.M_max:
@@ -144,22 +144,22 @@ class Vis2D5(object):
                 s.calc_np(i)
         #     Compare a new position of a particle x to its pBest
         #     if new position of x is better than pBest:
-                s.ax.clear()
-                s.vis_base()
-                s.update()
-                s.updatev(idx)
+
                 if s.pos_better(i, idx):
         #         pBest = new position of x
                     i.x = i.nx
                     i.y = i.ny
-                    i.z = i.nx
+                    i.z = i.nz
         #         if pBest is better than gBest:
                     if i.z > s.gb.z:
                         s.gb = i
         #             gBest = pBest
                 idx = idx + 1
 
-
+            s.ax.clear()
+            s.vis_base()
+            s.update()
+            s.updatev(1)
 
         # m += 1/
             s.m = s.m + 1
@@ -274,27 +274,31 @@ class Vis2D5(object):
     # wc = 0.5
     # phi_p = 0.5
     # phi_g = 0.5
-    wc = 0.1
+    wc = 0.9
     phi_p = 0.5
-    phi_g = 0.5
-    vlen = 2
+    phi_g = 0.9
+    vmax_len = 5
+    v_len = 2
 
     def calc_vel(s, i):
+        def trim(x):
+            if x > s.vmax_len:
+                x = s.vmax_len
+            if x < -s.vmax_len:
+                x = -s.vmax_len
+            return x
         def ru():
             return random.uniform(0,1)
         def cv(x, gx):
-            return x * s.wc + s.phi_p * ru() * (x) + s.phi_g * ru() * (gx)
+            # random.choice([-1.0, 1.0])
+            return (x * s.wc + ru() * s.phi_p * (x) + s.phi_g * ru() * (gx))
+
         i.vx = cv(i.vx, s.gb.vx)
-        # if i.vx > s.vlen:
-        #     i.vx = s.vlen
-        # if i.vx < -s.vlen:
-        #     i.vx = -s.vlen
+        i.vx = trim(i.vx)
 
         i.vy = cv(i.vy, s.gb.vy)
-        # if i.vy > s.vlen:
-        #     i.vy = s.vlen
-        # if i.vy < -s.vlen:
-        #     i.vy = -s.vlen
+        i.vy = trim(i.vy)
+
         # i.vz = s.alg(i.vx, i.vy)
         dvx = i.x + i.vx
         if dvx > s.plane[0] and dvx < s.plane[1]:
@@ -321,10 +325,10 @@ class Vis2D5(object):
         return i.nz > i.z
 
     def calc_np(s, i):
-        nx = i.x + i.vx
+        nx = i.x + i.vx * s.v_len
         if (nx > s.plane[0] and nx < s.plane[1]):
             i.nx = nx
-        ny = i.y + i.vy
+        ny = i.y + i.vy * s.v_len
         if(ny > s.plane[0] and ny < s.plane[1]):
             i.ny = ny
         i.nz = s.alg(i.nx, i.ny)
