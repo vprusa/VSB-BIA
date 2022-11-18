@@ -21,6 +21,11 @@ class Pt(object):
     vx = 0
     vy = 0
     vz = 0
+
+    nx = 0
+    ny = 0
+    nz = 0
+
     def __init__(s, x, y):
         s.x = x
         s.y = y
@@ -71,7 +76,7 @@ def f(xi, xi1):
 class Vis2D5(object):
     frameNo = 0
 
-    frameTimeout = 0.5
+    frameTimeout = 0.1
     nxgraphOptions = None
     G = None
     D = None
@@ -109,17 +114,19 @@ class Vis2D5(object):
             Vis2D5.fig = plt.figure("BIA - #4 - 4. Differential evolution")
             Vis2D5.plt.clf()
 
-        # ax = Vis2D5.plt.axes(projection='2d')
-        ax = Vis2D5.plt.axes()
+        ax = Vis2D5.plt.axes(projection='3d')
+        # ax = Vis2D5.plt.axes()
         s.ax = ax
 
         s.vis_base()
         # Vis2D5.plt.pause(3)
+        s.update()
 
         # swarm = Generate pop_size random individuals (you can use the class Solution mentioned in Exercise 1)
         s.swarm = s.gen_pop()
         # gBest = Select the best individual from the population
-        s.gb = s.swarm[s.sel_best(s.swarm)]
+        s.bg_idx = s.sel_best()
+        s.gb = s.swarm[s.bg_idx]
         # For each particle, generate velocity vector v
         # s.gbv = s.gen_vel(s.swarm)
         s.gen_vel(s.swarm)
@@ -137,14 +144,23 @@ class Vis2D5(object):
                 s.calc_np(i)
         #     Compare a new position of a particle x to its pBest
         #     if new position of x is better than pBest:
+                s.ax.clear()
+                s.vis_base()
+                s.update()
+                s.updatev(idx)
                 if s.pos_better(i, idx):
         #         pBest = new position of x
-                    i.x, i.y, i.z = i.nx, i.ny, i.nz
+                    i.x = i.nx
+                    i.y = i.ny
+                    i.z = i.nx
         #         if pBest is better than gBest:
                     if i.z > s.gb.z:
                         s.gb = i
         #             gBest = pBest
                 idx = idx + 1
+
+
+
         # m += 1/
             s.m = s.m + 1
 
@@ -201,51 +217,19 @@ class Vis2D5(object):
             single3(dx, 1) + single3(dy, 2), 4)
 
     def vis_base(s):
-        s.plane = [-10, 10, 60]
+        # s.plane = [-10, 10, 60]
 
         s.x = np.linspace(s.plane[0], s.plane[1], s.plane[2])
         s.y = np.linspace(s.plane[0], s.plane[1], s.plane[2])
-        s.z = np.linspace(s.plane[0], s.plane[1], s.plane[2])
 
         s.a = 20
         s.b = 0.2
         s.c = 2 * np.pi
         s.d = 2
         s.X, s.Y = np.meshgrid(s.x, s.y)
+        s.Z = s.alg(s.X, s.Y)
 
-        # s.Z = s.alg(s.X, s.Y)
-        # s.rbf = scipy.interpolate.Rbf(s.X, s.Y, s.Z, function='linear')
-        # s.zi = s.rbf(s.x, s.y)
-        #
-        # # s.ax.plot_wireframe(s.X, s.Y, cmap="coolwarm", zorder=1)
-        #
-        # s.plt.imshow(s.zi, vmin=s.z.min(), vmax=s.z.max(), origin='lower', extent=[s.x.min(), s.x.max(), s.y.min(), s.y.max()])
-        # s.plt.scatter(s.x, s.y, c=s.z)
-        # s.plt.colorbar()
-        # s.plt.show()
-
-        # Generate data:
-        # x, y, z = 100 * np.random.random((3,10))
-
-        # Set up a regular grid of interpolation points
-        # s.plane[2] = 100
-        s.xi, s.yi = np.linspace(s.plane[0], s.plane[1], s.plane[2]), np.linspace(s.plane[0], s.plane[1], s.plane[2])
-        s.xi, s.yi = np.meshgrid(s.xi, s.yi)
-
-        # Interpolate
-        s.zi = s.alg(s.xi, s.yi)
-        # s.zi = s.Zakharov(s.xi, s.yi)
-
-        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.Rbf.html
-        s.rbf = scipy.interpolate.Rbf(s.xi, s.yi, s.zi, function='linear')
-        # s.zi = s.rbf(s.xi, s.yi)
-
-        s.plt.imshow(s.zi, vmin=s.zi.min(), vmax=s.zi.max(), origin='lower', extent=[s.xi.min(), s.xi.max(), s.yi.min(), s.yi.max()])
-        # s.plt.imshow(s.zi, vmin=s.zi.min(), vmax=s.zi.max(), origin='lower', extent=[s.x.min(), s.x.max(), s.y.min(), s.y.max()])
-        # plt.scatter(x, y, c=z)
-        # s.plt.colorbar()
-        s.plt.show()
-
+        s.ax.plot_wireframe(s.X, s.Y, s.Z, cmap="coolwarm", zorder=1, linewidth=1)
         s.ax.set_xlabel('x')
         s.ax.set_ylabel('y')
         s.ax.set_zlabel('z')
@@ -258,27 +242,78 @@ class Vis2D5(object):
         s.ax.set_yticks([])
         s.ax.set_title(s.__class__.__name__ + ": Step #{} ".format(Vis2D5.frameNo))
 
-        Vis2D5.plt.pause(s.frameTimeout)
-        Vis2D5.frameNo += 1
         # if(s.max_iterations - 5 < VisualizationBase3D.frameNo):
 
+    def sleep(s):
+        Vis2D5.plt.pause(s.frameTimeout)
+        Vis2D5.frameNo += 1
 
-    wc = 0.5
+    def updatev(s, idx):
+        zoffset = 0
+        s.dx = list(map(lambda i: i.x, s.swarm))
+        s.dy = list(map(lambda i: i.y, s.swarm))
+        s.dz = list(map(lambda i: i.z + zoffset, s.swarm))
+        s.nx = list(map(lambda i: i.nx, s.swarm))
+        s.ny = list(map(lambda i: i.ny, s.swarm))
+        s.nz = list(map(lambda i: i.nz + zoffset, s.swarm))
+        # s.dvx = list(map(lambda i: i.vx, s.swarm))
+        # s.dvy = list(map(lambda i: i.vy, s.swarm))
+        # s.dvz1 = list(map(lambda i: i.vz, s.swarm))
+        # s.dvz = list(map(lambda i: i.vz + zoffset, s.swarm))
+        s.ax.scatter(s.dx, s.dy, s.dz, marker='.', color="red")
+        # if(idx > 0):
+        i = 0
+        for x in s.dx:
+            # s.ax.plot([s.dx[i],s.dx[i]+s.dvx[i]], [s.dy[i],s.dy[i]+s.dvy[i]], zs=[s.dz[i],s.dz[i]+s.dvz[i] + zoffset])
+            # s.ax.plot([s.dx[i], s.dx[i]+s.dvx[i]], [s.dy[i], s.dy[i]+s.dvy[i]], zs=[s.dz[i], s.dz[i] + s.dvz1[i]])
+            if s.nz[i] != 0:
+                s.ax.plot([s.dx[i], s.nx[i]], [s.dy[i], s.ny[i]], zs=[s.dz[i], s.nz[i]])
+            i = i + 1
+        s.sleep()
+
+    # wc = 0.5
+    # phi_p = 0.5
+    # phi_g = 0.5
+    wc = 0.1
     phi_p = 0.5
     phi_g = 0.5
+    vlen = 2
 
     def calc_vel(s, i):
         def ru():
             return random.uniform(0,1)
         def cv(x, gx):
             return x * s.wc + s.phi_p * ru() * (x) + s.phi_g * ru() * (gx)
-        i.vx = cv(i.vx, s.g.vx)
-        i.vy = cv(i.vy, s.g.vy)
+        i.vx = cv(i.vx, s.gb.vx)
+        # if i.vx > s.vlen:
+        #     i.vx = s.vlen
+        # if i.vx < -s.vlen:
+        #     i.vx = -s.vlen
+
+        i.vy = cv(i.vy, s.gb.vy)
+        # if i.vy > s.vlen:
+        #     i.vy = s.vlen
+        # if i.vy < -s.vlen:
+        #     i.vy = -s.vlen
+        # i.vz = s.alg(i.vx, i.vy)
+        dvx = i.x + i.vx
+        if dvx > s.plane[0] and dvx < s.plane[1]:
+            dvy = i.y + i.vy
+            if dvy > s.plane[0] and dvy < s.plane[1]:
+                i.dvx = dvx
+                i.dvy = dvy
+                i.dvz = s.alg(i.dvx, i.dvy)
 
     def gen_pop(s):
-        def rnd():
-            return [random.uniform(s.plane[0], s.plane[1]) for _ in range(s.points_cnt)]
-        return list(map(lambda x: Pt(x[0], x[1]), list(rnd(), rnd())))
+        # def rnd():
+        #     return [random.uniform(s.plane[0], s.plane[1]) for _ in range(s.points_cnt)]
+        pts = list()
+        for i in range(0, s.points_cnt-1):
+            pt = Pt(random.uniform(s.plane[0], s.plane[1]), random.uniform(s.plane[0], s.plane[1]))
+            pt.z = s.alg(pt.x, pt.y)
+            pts.append(pt)
+        return pts
+        # return list(map(lambda x: Pt(x[0], x[1]), (rnd(), rnd())))
 
     def pos_better(s, i, idx):
         i.z = s.alg(i.x, i.y)
@@ -286,31 +321,35 @@ class Vis2D5(object):
         return i.nz > i.z
 
     def calc_np(s, i):
-        i.nx = i.x + i.vx
-        i.ny = i.y + i.vy
+        nx = i.x + i.vx
+        if (nx > s.plane[0] and nx < s.plane[1]):
+            i.nx = nx
+        ny = i.y + i.vy
+        if(ny > s.plane[0] and ny < s.plane[1]):
+            i.ny = ny
+        i.nz = s.alg(i.nx, i.ny)
         pass
 
     b_lo = 0
     b_up = 1
 
     def gen_vel(s, swarm):
-        def rnd():
-            return random.uniform(s.b_lo, s.b_up)
         for p in swarm:
-            p.vx = rnd()
-            p.vy = rnd()
+            p.vx = random.uniform(s.b_lo, s.b_up)
+            p.vy = random.uniform(s.b_lo, s.b_up)
+            p.vz = s.alg(p.vx, p.vy)
         pass
 
-    def sel_best(s, swarm):
-        bi = swarm[0]
-        bv = s.alg(bi)
+    def sel_best(s):
+        bi = s.swarm[0]
+        bv = s.alg(bi.x, bi.y)
         bidx = 0
         idx = 0
-        for p in swarm:
+        for p in s.swarm:
             nbv = s.alg(p.x, p.y)
             if nbv > bv:
                 bv = nbv
-                bidx = swarm[idx]
+                bidx = idx
             idx = idx + 1
         return bidx
 
