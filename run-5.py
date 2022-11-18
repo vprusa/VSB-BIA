@@ -1,10 +1,8 @@
-
 from random import random
 
 from base import *
 import numpy as np
 import random
-import scipy.interpolate
 
 try:
     import seaborn as sns
@@ -35,38 +33,11 @@ def ackley(xi, yi, a, b, c, d):
     part2 = - np.exp((1.0 / d) * (np.cos(c * xi) + np.cos(c * yi)))
     return part1 + part2 + a + np.exp(1)
     return (100 * np.power((xi - np.power(yi, 2)), 2) + np.power((yi - 1), 2))
-    # plane = [-10, 10, 30]
-
-    # def alg(s, dx, dy):
-    # dx = xi
-    # dy = yi
-    # def single1(x):
-    #     return np.power(x,2)
-    # def single2(x, i):
-    #     return 0.5 * i * x
-    # def single3(x, i):
-    #     return 0.5 * i * x
-    # return single1(dx) + single1(dy) + np.power(single2(dx,1) + single2(dy,2),2) + np.power(single3(dx,1) + single3(dy,2),4)
-
-
-    # def alg(s, dx, dy):
-    # def single1(x):
-    #     return np.power(x,2)
-    # def single2(x, i):
-    #     return 0.5 * i * x
-    # def single3(x, i):
-    #     return 0.5 * i * x
-    # return single1(dx) + single1(dy) + np.power(single2(dx,1) + single2(dy,2),2) + np.power(single3(dx,1) + single3(dy,2),4)
-
-
-def f(xi, xi1):
-    # Rosenbrock Function
-    return (100 * np.power((xi1 - np.power(xi, 2)), 2) + np.power((xi - 1), 2))
 
 class Vis3D(object):
     frameNo = 0
 
-    frameTimeout = 0.1
+    frameTimeout = 0.025
     nxgraphOptions = None
     G = None
     D = None
@@ -81,7 +52,7 @@ class Vis3D(object):
     dims = 2
     plane = [-32, 32, 60]
     points_cnt = 30
-    max_iterations = 50
+    max_iterations = 100
 
     a = 20
     b = 0.2
@@ -105,11 +76,8 @@ class Vis3D(object):
             Vis3D.plt.clf()
 
         ax = Vis3D.plt.axes(projection='3d')
-        # ax = Vis3D.plt.axes()
         s.ax = ax
-
         s.vis_base()
-        # Vis3D.plt.pause(3)
         s.update()
 
         # swarm = Generate pop_size random individuals (you can use the class Solution mentioned in Exercise 1)
@@ -118,11 +86,10 @@ class Vis3D(object):
         s.bg_idx = s.sel_best()
         s.gb = s.swarm[s.bg_idx]
         # For each particle, generate velocity vector v
-        # s.gbv = s.gen_vel(s.swarm)
         s.gen_vel(s.swarm)
         s.m = 0
-        s.M_max = 35
-        s.updatev(1)
+        s.M_max = s.max_iterations
+        s.updatev()
         Vis3D.plt.pause(1)
 
         # while m < M_max :
@@ -150,7 +117,7 @@ class Vis3D(object):
             s.ax.clear()
             s.vis_base()
             s.update()
-            s.updatev(1)
+            s.updatev()
 
         # m += 1/
             s.m = s.m + 1
@@ -158,14 +125,10 @@ class Vis3D(object):
         s.update()
         s.g = s.g + 1
         Vis3D.plt.pause(2)
-
-
         s.plt.clf()
 
     def alg(s, dx, dy):
-        # return ackley2(dx, s.a, s.b, s.c, s.d)
         return ackley(dx, dy, s.a, s.b, s.c, s.d)
-        # return (100 * np.power((dy - np.power(dx, 2)), 2) + np.power((dx - 1), 2))
 
     def cmp(s, oldx, oldy, newx, newy):
         newz = s.alg(newx, newy)
@@ -174,20 +137,6 @@ class Vis3D(object):
             return oldx, oldy
         else:
             return newx, newy
-
-    # plane = [-10, 10, 30]
-    def Zakharov(s, dx, dy):
-        def single1(x):
-            return np.power(x, 2)
-
-        def single2(x, i):
-            return 0.5 * i * x
-
-        def single3(x, i):
-            return 0.5 * i * x
-
-        return single1(dx) + single1(dy) + np.power(single2(dx, 1) + single2(dy, 2), 2) + np.power(
-            single3(dx, 1) + single3(dy, 2), 4)
 
     def vis_base(s):
         # s.plane = [-10, 10, 60]
@@ -221,7 +170,7 @@ class Vis3D(object):
         Vis3D.plt.pause(s.frameTimeout)
         Vis3D.frameNo += 1
 
-    def updatev(s, idx):
+    def updatev(s):
         zoffset = 0
         s.dx = list(map(lambda i: i.x, s.swarm))
         s.dy = list(map(lambda i: i.y, s.swarm))
@@ -230,7 +179,7 @@ class Vis3D(object):
         s.ny = list(map(lambda i: i.ny, s.swarm))
         s.nz = list(map(lambda i: i.nz + zoffset, s.swarm))
         s.ax.scatter(s.dx, s.dy, s.dz, marker='.', color="red")
-        # if(idx > 0):
+        s.ax.scatter(s.gb.x, s.gb.y, s.gb.z, marker='o', color="green")
         i = 0
         for x in s.dx:
             if s.nz[i] != 0:
@@ -238,26 +187,22 @@ class Vis3D(object):
             i = i + 1
         s.sleep()
 
-    # wc = 0.5
-    # phi_p = 0.5
-    # phi_g = 0.5
     wc = 0.1
     phi_p = 0.1
     phi_g = 0.1
-    vmax_len = 3
-    v_len = 3
+    v_max = 5
+    v_mult = 5
 
     def calc_vel(s, i):
         def trim(x):
-            if x > s.vmax_len:
-                x = s.vmax_len
-            if x < -s.vmax_len:
-                x = -s.vmax_len
+            if x > s.v_max:
+                x = s.v_max
+            if x < -s.v_max:
+                x = -s.v_max
             return x
         def ru():
             return random.uniform(0, 1)
         def cv(v, gx, pi, xi):
-            # random.choice([-1.0, 1.0])
             return -(v * s.wc + ru() * s.phi_p * (pi - xi) + s.phi_g * ru() * (gx - xi))
 
         i.vx = cv(i.vx, s.gb.x, i.x, s.gb.x)
@@ -266,7 +211,6 @@ class Vis3D(object):
         i.vy = cv(i.vy, s.gb.y, i.y, s.gb.y)
         i.vy = trim(i.vy)
 
-        # i.vz = s.alg(i.vx, i.vy)
         dvx = i.x + i.vx
         if dvx > s.plane[0] and dvx < s.plane[1]:
             dvy = i.y + i.vy
@@ -276,26 +220,23 @@ class Vis3D(object):
                 i.dvz = s.alg(i.dvx, i.dvy)
 
     def gen_pop(s):
-        # def rnd():
-        #     return [random.uniform(s.plane[0], s.plane[1]) for _ in range(s.points_cnt)]
         pts = list()
         for i in range(0, s.points_cnt-1):
             pt = Pt(random.uniform(s.plane[0], s.plane[1]), random.uniform(s.plane[0], s.plane[1]))
             pt.z = s.alg(pt.x, pt.y)
             pts.append(pt)
         return pts
-        # return list(map(lambda x: Pt(x[0], x[1]), (rnd(), rnd())))
 
     def pos_better(s, i, idx):
         i.z = s.alg(i.x, i.y)
         i.nz = s.alg(i.nx, i.ny)
-        return i.nz < i.z
+        return i.nz <= i.z
 
     def calc_np(s, i):
-        nx = i.x + i.vx * s.v_len
+        nx = i.x + i.vx * s.v_mult
         if (nx > s.plane[0] and nx < s.plane[1]):
             i.nx = nx
-        ny = i.y + i.vy * s.v_len
+        ny = i.y + i.vy * s.v_mult
         if(ny > s.plane[0] and ny < s.plane[1]):
             i.ny = ny
         i.nz = s.alg(i.nx, i.ny)
@@ -318,17 +259,20 @@ class Vis3D(object):
         idx = 0
         for p in s.swarm:
             nbv = s.alg(p.x, p.y)
-            if nbv > bv:
+            if nbv >= bv:
                 bv = nbv
                 bidx = idx
             idx = idx + 1
         return bidx
 
 
-
-
+#######################################
+# Functions definitions
+#######################################
 
 class Sphere(Vis3D):
+
+    max_iterations = 30
 
     def alg(s, dx, dy):
         return (np.power(dx, 2) + (np.power(dy, 2)))
@@ -338,6 +282,9 @@ class Schwefel(Vis3D):
     Problematic, neads tweaking of params for generating next generation
     """
     plane = [-500, 500, 500]
+    max_iterations = 100
+    # v_max = 50
+    # v_mult = 30
 
     c = 418.9829
 
@@ -351,6 +298,9 @@ class Rosenbrock(Vis3D):
 class Rastrigin(Vis3D):
 
     plane = [-5, 5, 30]
+
+    v_max = 10
+    v_mult = 10
 
     c = 10
 
@@ -375,6 +325,9 @@ class Levy(Vis3D):
 
     plane = [-10, 10, 30]
 
+    v_max = 10
+    v_mult = 10
+
     def alg(s, dx, dy):
         def wi(x):
             return 1 + (x -1)/4
@@ -390,20 +343,22 @@ class Michalewicz(Vis3D):
     def alg(s, dx, dy):
         def single(x, i):
             return (np.sin(x)*np.power(np.sin((i*np.power(x,2))/np.pi),2*s.m))
-        return - (single(dx, 1) + single(dy,2))
+        return - (single(dx, 1) + single(dy, 2))
 
 class Zakharov(Vis3D):
 
     plane = [-10, 10, 30]
 
     def alg(s, dx, dy):
-        def single1(x):
-            return np.power(x,2)
-        def single2(x, i):
+        def f1(x):
+            return np.power(x, 2)
+        def f2(x, i):
             return 0.5 * i * x
-        def single3(x, i):
+        def f3(x, i):
             return 0.5 * i * x
-        return single1(dx) + single1(dy) + np.power(single2(dx,1) + single2(dy,2),2) + np.power(single3(dx,1) + single3(dy,2),4)
+        def pw(x, i):
+            return np.power(x, i)
+        return f1(dx) + f1(dy) + pw(f2(dx, 1) + f2(dy, 2), 2) + pw(f3(dx, 1) + f3(dy, 2), 4)
 
 class Ackley(Vis3D):
     a = 20
@@ -417,7 +372,6 @@ class Ackley(Vis3D):
         return part1 + part2 + s.a + np.exp(1)
 
 
-# while True:
 # Sphere, Schwefel, Rosenbrock, Rastrigin, Griewangk, Levy, Michalewicz, Zakharov, Ackley
 
 plt.pause(2)
