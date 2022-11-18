@@ -116,8 +116,6 @@ class Vis2D5(object):
         s.vis_base()
         # Vis2D5.plt.pause(3)
 
-        s.dx = np.random.choice(s.x, s.points_cnt)
-
         # swarm = Generate pop_size random individuals (you can use the class Solution mentioned in Exercise 1)
         s.swarm = s.gen_pop()
         # gBest = Select the best individual from the population
@@ -125,8 +123,6 @@ class Vis2D5(object):
         # For each particle, generate velocity vector v
         # s.gbv = s.gen_vel(s.swarm)
         s.gen_vel(s.swarm)
-        s.gnb = s.gb.copy()
-        # m = 0
         s.m = 0
         s.M_max = 10
 
@@ -136,17 +132,17 @@ class Vis2D5(object):
             idx = 0
             for i in s.swarm:
         #     Calculate a new velocity v for a particle x # Check boundaries of velocity (v_mini, v_maxi)
-                s.nv = s.calc_vel(i)
+                s.calc_vel(i)
         #     Calculate a new position for a particle x # Old position is always replaced by a new position. CHECK BOUNDARIES!
-                s.nx, s.ny = s.calc_np(i)
+                s.calc_np(i)
         #     Compare a new position of a particle x to its pBest
         #     if new position of x is better than pBest:
-                if s.pos_better(s.nx, s.ny, i, idx):
+                if s.pos_better(i, idx):
         #         pBest = new position of x
-                    s.gnb[idx] = (s.xn, s.ny)
+                    i.x, i.y, i.z = i.nx, i.ny, i.nz
         #         if pBest is better than gBest:
-                    if s.pbest_gbest(s.nx, s.gb, s.pb):
-                        s.gb = s.pb
+                    if i.z > s.gb.z:
+                        s.gb = i
         #             gBest = pBest
                 idx = idx + 1
         # m += 1/
@@ -266,18 +262,32 @@ class Vis2D5(object):
         Vis2D5.frameNo += 1
         # if(s.max_iterations - 5 < VisualizationBase3D.frameNo):
 
+
+    wc = 0.5
+    phi_p = 0.5
+    phi_g = 0.5
+
     def calc_vel(s, i):
-        pass
+        def ru():
+            return random.uniform(0,1)
+        def cv(x, gx):
+            return x * s.wc + s.phi_p * ru() * (x) + s.phi_g * ru() * (gx)
+        i.vx = cv(i.vx, s.g.vx)
+        i.vy = cv(i.vy, s.g.vy)
 
     def gen_pop(s):
         def rnd():
             return [random.uniform(s.plane[0], s.plane[1]) for _ in range(s.points_cnt)]
         return list(map(lambda x: Pt(x[0], x[1]), list(rnd(), rnd())))
 
-    def pos_better(s, nx, ny, i, idx):
-        pass
+    def pos_better(s, i, idx):
+        i.z = s.alg(i.x, i.y)
+        i.nz = s.alg(i.nx, i.ny)
+        return i.nz > i.z
 
     def calc_np(s, i):
+        i.nx = i.x + i.vx
+        i.ny = i.y + i.vy
         pass
 
     b_lo = 0
