@@ -1,3 +1,7 @@
+# SOMA
+# https://kelvin.cs.vsb.cz/task/BIA/2022W/SIG0033/komb3/asset/soma.pdf
+# Self-organizing migrating algorithm (SOMA)
+
 from random import random
 
 from base import *
@@ -13,6 +17,7 @@ import matplotlib.animation ; matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 
 class Pt(object):
+
     x = 0
     y = 0
     z = 0
@@ -51,7 +56,7 @@ class Vis3D(object):
 
     dims = 2
     plane = [-32, 32, 60]
-    points_cnt = 30
+    points_cnt = 5
     max_iterations = 100
 
     a = 20
@@ -86,33 +91,17 @@ class Vis3D(object):
         # gBest = Select the best individual from the population
         s.bg_idx = s.sel_best()
         s.gb = s.swarm[s.bg_idx]
-        # For each particle, generate velocity vector v
-        s.gen_vel(s.swarm)
         s.m = 0
         s.M_max = s.max_iterations
         s.updatev(1)
-        Vis3D.plt.pause(1)
+        # Vis3D.plt.pause(1)
 
         # while m < M_max :
         while s.m < s.M_max:
             # for each i, x in enumerate(swarm):
             idx = 0
             for i in s.swarm:
-        #     Calculate a new velocity v for a particle x # Check boundaries of velocity (v_mini, v_maxi)
-                s.calc_vel(i)
-        #     Calculate a new position for a particle x # Old position is always replaced by a new position. CHECK BOUNDARIES!
-                s.calc_np(i)
-        #     Compare a new position of a particle x to its pBest
-        #     if new position of x is better than pBest:
-                if s.pos_better(i, idx):
-        #         pBest = new position of x
-                    i.x = i.nx
-                    i.y = i.ny
-                    i.z = i.nz
-        #         if pBest is better than gBest:
-                    if i.z < s.gb.z:
-                        s.gb = i
-        #             gBest = pBest
+
                 idx = idx + 1
 
             s.ax.clear()
@@ -120,7 +109,6 @@ class Vis3D(object):
             s.update()
             s.updatev()
 
-        # m += 1/
             s.m = s.m + 1
 
         s.update()
@@ -189,38 +177,6 @@ class Vis3D(object):
         s.ax.scatter(s.gb.x, s.gb.y, s.gb.z + zoffset, marker='o', color="green")
         s.sleep()
 
-    wc = 0.1
-    phi_p = 0.1
-    phi_g = 0.1
-    v_max = 5
-    v_mult = 5
-
-    def calc_vel(s, i):
-        def trim(x):
-            if x > s.v_max:
-                x = s.v_max
-            if x < -s.v_max:
-                x = -s.v_max
-            return x
-        def ru():
-            return random.uniform(0, 1)
-        def cv(v, gx, pi, xi):
-            return -(v * s.wc + ru() * s.phi_p * (pi - xi) + s.phi_g * ru() * (gx - xi))
-
-        i.vx = cv(i.vx, s.gb.x, i.x, s.gb.x)
-        i.vx = trim(i.vx)
-
-        i.vy = cv(i.vy, s.gb.y, i.y, s.gb.y)
-        i.vy = trim(i.vy)
-
-        dvx = i.x + i.vx
-        if dvx > s.plane[0] and dvx < s.plane[1]:
-            dvy = i.y + i.vy
-            if dvy > s.plane[0] and dvy < s.plane[1]:
-                i.dvx = dvx
-                i.dvy = dvy
-                i.dvz = s.alg(i.dvx, i.dvy)
-
     def gen_pop(s):
         pts = list()
         for i in range(0, s.points_cnt-1):
@@ -228,31 +184,6 @@ class Vis3D(object):
             pt.z = s.alg(pt.x, pt.y)
             pts.append(pt)
         return pts
-
-    def pos_better(s, i, idx):
-        i.z = s.alg(i.x, i.y)
-        i.nz = s.alg(i.nx, i.ny)
-        return i.nz <= i.z
-
-    def calc_np(s, i):
-        nx = i.x + i.vx * s.v_mult
-        if (nx > s.plane[0] and nx < s.plane[1]):
-            i.nx = nx
-        ny = i.y + i.vy * s.v_mult
-        if(ny > s.plane[0] and ny < s.plane[1]):
-            i.ny = ny
-        i.nz = s.alg(i.nx, i.ny)
-        pass
-
-    b_lo = 0
-    b_up = 1
-
-    def gen_vel(s, swarm):
-        for p in swarm:
-            p.vx = random.uniform(s.b_lo, s.b_up)
-            p.vy = random.uniform(s.b_lo, s.b_up)
-            p.vz = s.alg(p.vx, p.vy)
-        pass
 
     def sel_best(s):
         bi = s.swarm[0]
@@ -380,17 +311,17 @@ class Ackley(Vis3D):
 
 # Sphere, Schwefel, Rosenbrock, Rastrigin, Griewangk, Levy, Michalewicz, Zakharov, Ackley
 
-plt.pause(2)
+# plt.pause(2)
 
-r = Sphere()
-r = Schwefel()
-r = Rosenbrock()
-r = Rastrigin()
-r = Griewangk()
-r = Levy()
-r = Michalewicz()
-r = Zakharov()
-r = Ackley()
-# r = Vis3D()
+# r = Sphere()
+# r = Schwefel()
+# r = Rosenbrock()
+# r = Rastrigin()
+# r = Griewangk()
+# r = Levy()
+# r = Michalewicz()
+# r = Zakharov()
+# r = Ackley()
+r = Vis3D()
 
 exit(0)

@@ -24,6 +24,9 @@ class Pt(object):
     ny = 0
     nz = 0
 
+    # PTR vector
+    ptr_vec = [1,1]
+
     def __init__(s, x, y):
         s.x = x
         s.y = y
@@ -32,7 +35,7 @@ def ackley(xi, yi, a, b, c, d):
     part1 = - a * np.exp((-b * np.sqrt((1.0 / d) * (np.power(xi, 2) + np.power(yi, 2)))))
     part2 = - np.exp((1.0 / d) * (np.cos(c * xi) + np.cos(c * yi)))
     return part1 + part2 + a + np.exp(1)
-    return (100 * np.power((xi - np.power(yi, 2)), 2) + np.power((yi - 1), 2))
+    # return (100 * np.power((xi - np.power(yi, 2)), 2) + np.power((yi - 1), 2))
 
 class Vis3D(object):
     frameNo = 0
@@ -65,6 +68,10 @@ class Vis3D(object):
     F = 0.5
     cr = 0.7
 
+    p_len = 5
+    step = 1
+    ptr = 1
+
     def __init__(s):
         Vis3D.plt = plt
         Vis3D.frameNo = 0
@@ -87,7 +94,6 @@ class Vis3D(object):
         s.bg_idx = s.sel_best()
         s.gb = s.swarm[s.bg_idx]
         # For each particle, generate velocity vector v
-        s.gen_vel(s.swarm)
         s.m = 0
         s.M_max = s.max_iterations
         s.updatev(1)
@@ -98,21 +104,21 @@ class Vis3D(object):
             # for each i, x in enumerate(swarm):
             idx = 0
             for i in s.swarm:
-        #     Calculate a new velocity v for a particle x # Check boundaries of velocity (v_mini, v_maxi)
-                s.calc_vel(i)
-        #     Calculate a new position for a particle x # Old position is always replaced by a new position. CHECK BOUNDARIES!
-                s.calc_np(i)
-        #     Compare a new position of a particle x to its pBest
-        #     if new position of x is better than pBest:
-                if s.pos_better(i, idx):
-        #         pBest = new position of x
-                    i.x = i.nx
-                    i.y = i.ny
-                    i.z = i.nz
-        #         if pBest is better than gBest:
-                    if i.z < s.gb.z:
-                        s.gb = i
-        #             gBest = pBest
+                t = 0
+                while t <= s.p_len:
+                    s.set_ptr(idx)
+                    # update new jump position
+                    i.nx = i.x + (s.gb.x - i.x) * t * i.ptr_vec[0]
+                    i.ny = i.y + (s.gb.y - i.y) * t * i.ptr_vec[0]
+                    # calc new jump function value
+                    i.z = s.alg(i.x, i.y)
+                    i.nz = s.alg(i.nx, i.ny)
+                    # TODO double check jumps
+                    if i.nz < i.z:
+                        i.x = i.nx
+                        i.y = i.ny
+                    t = t + s.step
+                    # TODO visualize here lines
                 idx = idx + 1
 
             s.ax.clear()
@@ -127,6 +133,14 @@ class Vis3D(object):
         s.g = s.g + 1
         Vis3D.plt.pause(2)
         s.plt.clf()
+
+    def set_ptr(s, i):
+        for i in range(0,len(i.ptr_vec)-1):
+            rnd_j = random.choice([0, 1])
+            if rnd_j < s.ptr:
+                s.swarm[i].ptr_vec[i] = rnd_j
+            else:
+                s.swarm[i].ptr_vec[i] = 0
 
     def alg(s, dx, dy):
         return ackley(dx, dy, s.a, s.b, s.c, s.d)
