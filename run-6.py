@@ -13,23 +13,46 @@ import matplotlib.animation ; matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 
 class Pt(object):
-    x = 0
-    y = 0
-    z = 0
-    vx = 0
-    vy = 0
-    vz = 0
+    # x = 0
+    # y = 0
+    # z = 0
+    # p = list()
+    # vx = 0
+    # vy = 0
+    # vz = 0
 
-    nx = 0
-    ny = 0
-    nz = 0
+    # n = list()
+
+    # nx = 0
+    # ny = 0
+    # nz = 0
 
     # PTR vector
-    ptr_vec = [1,1]
 
-    def __init__(s, x, y):
-        s.x = x
-        s.y = y
+    def x(s, v=None):
+        if v is not None:
+            s.p[0] = v
+        return s.p[0]
+
+    def y(s, v=None):
+        if v is not None:
+            s.p[1] = v
+        return s.p[1]
+
+    def z(s, v=None):
+        if v is not None:
+            s.p[2] = v
+        return s.p[2]
+
+    def __init__(self, xx, yy):
+        # s.x(xx)
+        # s.y(yy)
+        self.ptr_vec = [1, 1]
+
+        self.n = list()
+        self.p = list()
+        self.p.append(xx)
+        self.p.append(yy)
 
 def ackley(xi, yi, a, b, c, d):
     part1 = - a * np.exp((-b * np.sqrt((1.0 / d) * (np.power(xi, 2) + np.power(yi, 2)))))
@@ -54,7 +77,7 @@ class Vis3D(object):
 
     dims = 2
     plane = [-32, 32, 60]
-    points_cnt = 30
+    points_cnt = 5
     max_iterations = 100
 
     a = 20
@@ -71,6 +94,8 @@ class Vis3D(object):
     p_len = 5
     step = 1
     ptr = 1
+
+    swarm = list()
 
     def __init__(s):
         Vis3D.plt = plt
@@ -89,42 +114,61 @@ class Vis3D(object):
         s.update()
 
         # swarm = Generate pop_size random individuals (you can use the class Solution mentioned in Exercise 1)
-        s.swarm = s.gen_pop()
+        # s.swarm = s.gen_pop()
+        s.gen_pop()
         # gBest = Select the best individual from the population
         s.bg_idx = s.sel_best()
         s.gb = s.swarm[s.bg_idx]
         # For each particle, generate velocity vector v
         s.m = 0
         s.M_max = s.max_iterations
-        s.updatev(1)
         Vis3D.plt.pause(1)
+        s.updatep()
+
 
         # while m < M_max :
         while s.m < s.M_max:
             # for each i, x in enumerate(swarm):
+            s.ax.scatter(s.gb.x(), s.gb.y(), s.gb.z(), marker='.', color="green")
             idx = 0
             for i in s.swarm:
+                s.ax.scatter(i.x(), i.y(), i.z(), marker='.', color="blue")
+
                 t = 0
+                t_idx = 0
+                i.n = list()
+                i.n.append(Pt(i.x(), i.y()))
                 while t <= s.p_len:
-                    s.set_ptr(idx)
+                    s.set_ptr(i)
                     # update new jump position
-                    i.nx = i.x + (s.gb.x - i.x) * t * i.ptr_vec[0]
-                    i.ny = i.y + (s.gb.y - i.y) * t * i.ptr_vec[0]
+                    inx_1 = i.n[t_idx].p[0] + (s.gb.p[0] - i.n[t_idx].p[0]) * t * i.ptr_vec[0]
+                    iny_1 = i.n[t_idx].p[1] + (s.gb.p[1] - i.n[t_idx].p[1]) * t * i.ptr_vec[1]
+                    i.n.append(Pt(inx_1, iny_1))
                     # calc new jump function value
-                    i.z = s.alg(i.x, i.y)
-                    i.nz = s.alg(i.nx, i.ny)
+                    iz = s.algp(i.n[t_idx])
+                    inz = s.algp(i.n[t_idx+1])
                     # TODO double check jumps
-                    if i.nz < i.z:
-                        i.x = i.nx
-                        i.y = i.ny
+                    if inz < iz:
+                        i.n[0] = i.n[t_idx + 1]
+                    s.updatev(i, t_idx)
+                    t_idx = t_idx + 1
                     t = t + s.step
                     # TODO visualize here lines
+                s.update()
+                s.updatep()
+                # s.ax.scatter(i.x(), i.y(), i.z(), marker='.', color="blue")
+                s.ax.scatter(s.gb.x(), s.gb.y(), s.gb.z(), marker='.', color="green")
+                # if i == s.gb:
+                #     s.ax.scatter(s.gb.x(), s.gb.y(), s.gb.z(), marker='.', color="green")
+                # else:
+                #     s.ax.scatter(i.x(), i.y(), i.z(), marker='.', color="blue")
+
                 idx = idx + 1
 
             s.ax.clear()
             s.vis_base()
             s.update()
-            s.updatev()
+            # s.updatev()
 
         # m += 1/
             s.m = s.m + 1
@@ -135,12 +179,15 @@ class Vis3D(object):
         s.plt.clf()
 
     def set_ptr(s, i):
-        for i in range(0,len(i.ptr_vec)-1):
-            rnd_j = random.choice([0, 1])
+        rnd_j = random.choice([0, 1])
+        for idx in range(0, len(i.ptr_vec)):
             if rnd_j < s.ptr:
-                s.swarm[i].ptr_vec[i] = rnd_j
+                i.ptr_vec[idx] = rnd_j
             else:
-                s.swarm[i].ptr_vec[i] = 0
+                i.ptr_vec[idx] = 0
+
+    def algp(s, p):
+        return s.alg(p.x(), p.y())
 
     def alg(s, dx, dy):
         return ackley(dx, dy, s.a, s.b, s.c, s.d)
@@ -166,8 +213,8 @@ class Vis3D(object):
         s.X, s.Y = np.meshgrid(s.x, s.y)
         s.Z = s.alg(s.X, s.Y)
 
-        # s.ax.plot_wireframe(s.X, s.Y, s.Z, cmap="coolwarm", zorder=1, linewidth=1)
-        s.ax.plot_surface(s.X, s.Y, s.Z, cmap="coolwarm", zorder=1, linewidth=1)
+        s.ax.plot_wireframe(s.X, s.Y, s.Z, cmap="coolwarm", zorder=1, linewidth=1)
+        # s.ax.plot_surface(s.X, s.Y, s.Z, cmap="coolwarm", zorder=1, linewidth=1)
         s.ax.set_xlabel('x')
         s.ax.set_ylabel('y')
         s.ax.set_zlabel('z')
@@ -186,21 +233,33 @@ class Vis3D(object):
         Vis3D.plt.pause(s.frameTimeout)
         Vis3D.frameNo += 1
 
-    def updatev(s, idx = 0):
-        zoffset = -10
-        s.dx = list(map(lambda i: i.x, s.swarm))
-        s.dy = list(map(lambda i: i.y, s.swarm))
-        s.dz = list(map(lambda i: i.z + zoffset, s.swarm))
-        s.nx = list(map(lambda i: i.nx, s.swarm))
-        s.ny = list(map(lambda i: i.ny, s.swarm))
-        s.nz = list(map(lambda i: i.nz + zoffset, s.swarm))
+    def updatep(s):
+        zoffset = 10
+        s.dx = list(map(lambda i: i.x(), s.swarm))
+        s.dy = list(map(lambda i: i.y(), s.swarm))
+        s.dz = list(map(lambda i: i.z() + zoffset, s.swarm))
+        # s.nx = list(map(lambda i: i.nx, s.swarm))
+        # s.ny = list(map(lambda i: i.ny, s.swarm))
+        # s.nz = list(map(lambda i: i.nz + zoffset, s.swarm))
         s.ax.scatter(s.dx, s.dy, s.dz, marker='.', color="red")
-        i = 0
-        if idx == 0:
-            for x in s.dx:
-                s.ax.plot([s.dx[i], s.nx[i]], [s.dy[i], s.ny[i]], zs=[s.dz[i], s.nz[i]], color="red", linewidth=1)
-                i = i + 1
-        s.ax.scatter(s.gb.x, s.gb.y, s.gb.z + zoffset, marker='o', color="green")
+        s.ax.scatter(s.gb.x(), s.gb.y(), s.gb.z(), marker='.', color="green")
+        # if i == s.gb:
+        #     s.ax.scatter(s.gb.x(), s.gb.y(), s.gb.z(), marker='.', color="green")
+        # else:
+        #     s.ax.scatter(i.x(), i.y(), i.z(), marker='.', color="blue")
+
+
+    def updatev(s, i, idx=0):
+        zoffset = -10
+        # s.ax.scatter(i, s.dy, s.dz, marker='.', color="red")
+        # if idx == 0:
+            # for x in s.dx:
+                # s.ax.plot([s.dx[i], s.nx[i]], [s.dy[i], s.ny[i]], zs=[s.dz[i], s.nz[i]], color="red", linewidth=1)
+            # i = i + 1
+        oz = s.algp(i.n[idx-1])
+        nz = s.algp(i.n[idx])
+        s.ax.plot([i.n[idx-1].x(), i.n[idx-1].y()], [i.n[idx].x(), i.n[idx].y()], zs=[oz, nz], color="red", linewidth=1)
+        # s.ax.scatter(s.gb.x, s.gb.y, s.gb.z + zoffset, marker='o', color="green")
         s.sleep()
 
     wc = 0.1
@@ -236,12 +295,16 @@ class Vis3D(object):
                 i.dvz = s.alg(i.dvx, i.dvy)
 
     def gen_pop(s):
-        pts = list()
-        for i in range(0, s.points_cnt-1):
+        s.swarm = []
+        for i in range(0, s.points_cnt):
             pt = Pt(random.uniform(s.plane[0], s.plane[1]), random.uniform(s.plane[0], s.plane[1]))
-            pt.z = s.alg(pt.x, pt.y)
-            pts.append(pt)
-        return pts
+            pt.p.append(s.algp(pt))
+            s.swarm.append(pt)
+
+            # pt = Pt(random.uniform(s.plane[0], s.plane[1]), random.uniform(s.plane[0], s.plane[1]))
+            # s.swarm.append()
+            # s.swarm[i].p[2] = s.algp(s.swarm[i])
+        return s.swarm
 
     def pos_better(s, i, idx):
         i.z = s.alg(i.x, i.y)
@@ -270,11 +333,11 @@ class Vis3D(object):
 
     def sel_best(s):
         bi = s.swarm[0]
-        bv = s.alg(bi.x, bi.y)
+        bv = s.algp(bi)
         bidx = 0
         idx = 0
         for p in s.swarm:
-            nbv = s.alg(p.x, p.y)
+            nbv = s.algp(p)
             if nbv >= bv:
                 bv = nbv
                 bidx = idx
@@ -397,14 +460,14 @@ class Ackley(Vis3D):
 plt.pause(2)
 
 r = Sphere()
-r = Schwefel()
-r = Rosenbrock()
-r = Rastrigin()
-r = Griewangk()
-r = Levy()
-r = Michalewicz()
-r = Zakharov()
-r = Ackley()
+# r = Schwefel()
+# r = Rosenbrock()
+# r = Rastrigin()
+# r = Griewangk()
+# r = Levy()
+# r = Michalewicz()
+# r = Zakharov()
+# r = Ackley()
 # r = Vis3D()
 
 exit(0)
