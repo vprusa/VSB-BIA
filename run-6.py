@@ -132,7 +132,7 @@ class Vis3D(object):
             s.ax.scatter(s.gb.x(), s.gb.y(), s.gb.z(), marker='.', color="green")
             idx = 0
             for i in s.swarm:
-                s.ax.scatter(i.x(), i.y(), i.z(), marker='.', color="blue")
+                s.ax.scatter(i.x(), i.y(), i.z(), marker='o', color="blue")
 
                 t = 0
                 t_idx = 0
@@ -179,12 +179,14 @@ class Vis3D(object):
         s.plt.clf()
 
     def set_ptr(s, i):
-        rnd_j = random.choice([0, 1])
-        for idx in range(0, len(i.ptr_vec)):
-            if rnd_j < s.ptr:
-                i.ptr_vec[idx] = rnd_j
-            else:
-                i.ptr_vec[idx] = 0
+        i.ptr_vec[0] = 1
+        i.ptr_vec[1] = 1
+        # rnd_j = random.choice([0, 1])
+        # for idx in range(0, len(i.ptr_vec)):
+        #     if rnd_j < s.ptr:
+        #         i.ptr_vec[idx] = rnd_j
+        #     else:
+        #         i.ptr_vec[idx] = 0
 
     def algp(s, p):
         return s.alg(p.x(), p.y())
@@ -235,9 +237,10 @@ class Vis3D(object):
 
     def updatep(s):
         zoffset = 10
-        s.dx = list(map(lambda i: i.x(), s.swarm))
-        s.dy = list(map(lambda i: i.y(), s.swarm))
-        s.dz = list(map(lambda i: i.z() + zoffset, s.swarm))
+        swarm = list(filter(lambda i: i != s.gb,s.swarm.copy()))
+        s.dx = list(map(lambda i: i.x(), swarm))
+        s.dy = list(map(lambda i: i.y(), swarm))
+        s.dz = list(map(lambda i: i.z() + zoffset, swarm))
         # s.nx = list(map(lambda i: i.nx, s.swarm))
         # s.ny = list(map(lambda i: i.ny, s.swarm))
         # s.nz = list(map(lambda i: i.nz + zoffset, s.swarm))
@@ -258,7 +261,8 @@ class Vis3D(object):
             # i = i + 1
         oz = s.algp(i.n[idx-1])
         nz = s.algp(i.n[idx])
-        s.ax.plot([i.n[idx-1].x(), i.n[idx-1].y()], [i.n[idx].x(), i.n[idx].y()], zs=[oz, nz], color="red", linewidth=1)
+        # s.ax.plot([i.n[idx-1].x(), i.n[idx-1].y()], [i.n[idx].x(), i.n[idx].y()], zs=[oz, nz], color="red", linewidth=1)
+        s.ax.plot([i.n[idx].x(), i.n[idx-1].x()], [i.n[idx].y(), i.n[idx-1].y()], zs=[nz, oz], color="red", linewidth=1)
         # s.ax.scatter(s.gb.x, s.gb.y, s.gb.z + zoffset, marker='o', color="green")
         s.sleep()
 
@@ -338,7 +342,7 @@ class Vis3D(object):
         idx = 0
         for p in s.swarm:
             nbv = s.algp(p)
-            if nbv >= bv:
+            if nbv <= bv:
                 bv = nbv
                 bidx = idx
             idx = idx + 1
