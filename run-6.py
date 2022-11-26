@@ -66,7 +66,7 @@ def ackley(xi, yi, a, b, c, d):
 class Vis3D(object):
     frameNo = 0
 
-    frameTimeout = 0.2
+    frameTimeout = 0.0005
     nxgraphOptions = None
     G = None
     D = None
@@ -80,19 +80,10 @@ class Vis3D(object):
 
     dims = 2
     plane = [-32, 32, 60]
-    points_cnt = 10
-    max_iterations = 100
-
-    a = 20
-    b = 0.2
-    c = 2 * np.pi
-    d = 2
+    points_cnt = 6
+    max_iterations = 7
 
     g = 0
-    g_maxim = 20
-
-    F = 0.5
-    cr = 0.7
 
     p_len_multiplier_abs = 1.5
     p_len_multiplier_rel = 1.5
@@ -107,6 +98,7 @@ class Vis3D(object):
         Vis3D.frameNo = 0
 
         s.d = len(s.plane) - 1
+        s.m = 0
 
         if Vis3D.fig is None:
             Vis3D.fig = plt.figure("BIA - #5 - 5. Particle swarm optimization")
@@ -119,7 +111,6 @@ class Vis3D(object):
         s.update()
 
         # swarm = Generate pop_size random individuals (you can use the class Solution mentioned in Exercise 1)
-        # s.swarm = s.gen_pop()
         s.gen_pop()
         # gBest = Select the best individual from the population
         s.bg_idx = s.sel_best()
@@ -169,12 +160,7 @@ class Vis3D(object):
                     # TODO visualize here lines
                 s.update()
                 s.updatep()
-                # s.ax.scatter(i.x(), i.y(), i.z(), marker='.', color="blue")
                 s.ax.scatter(s.gb.x(), s.gb.y(), s.gb.z(), marker='.', color="green")
-                # if i == s.gb:
-                #     s.ax.scatter(s.gb.x(), s.gb.y(), s.gb.z(), marker='.', color="green")
-                # else:
-                #     s.ax.scatter(i.x(), i.y(), i.z(), marker='.', color="blue")
 
                 idx = idx + 1
             s.sleep()
@@ -184,9 +170,6 @@ class Vis3D(object):
             s.ax.clear()
             s.vis_base()
             s.update()
-            # s.updatev()
-
-        # m += 1/
             s.m = s.m + 1
 
         s.update()
@@ -229,8 +212,6 @@ class Vis3D(object):
             return newx, newy
 
     def vis_base(s):
-        # s.plane = [-10, 10, 60]
-
         s.x = np.linspace(s.plane[0], s.plane[1], s.plane[2])
         s.y = np.linspace(s.plane[0], s.plane[1], s.plane[2])
 
@@ -253,7 +234,7 @@ class Vis3D(object):
         # Scale plot ax
         s.ax.set_xticks([])
         s.ax.set_yticks([])
-        s.ax.set_title(s.__class__.__name__ + ": Step #{} ".format(Vis3D.frameNo))
+        s.ax.set_title(s.__class__.__name__ + ", iter: {}/{}, frame #{} ".format(s.m, Vis3D.max_iterations, Vis3D.frameNo))
 
         # if(s.max_iterations - 5 < VisualizationBase3D.frameNo):
 
@@ -267,29 +248,13 @@ class Vis3D(object):
         s.dx = list(map(lambda i: i.x(), swarm))
         s.dy = list(map(lambda i: i.y(), swarm))
         s.dz = list(map(lambda i: i.z() + zoffset, swarm))
-        # s.nx = list(map(lambda i: i.nx, s.swarm))
-        # s.ny = list(map(lambda i: i.ny, s.swarm))
-        # s.nz = list(map(lambda i: i.nz + zoffset, s.swarm))
         s.ax.scatter(s.dx, s.dy, s.dz, marker='.', color="red")
         s.ax.scatter(s.gb.x(), s.gb.y(), s.gb.z(), marker='.', color="green")
-        # if i == s.gb:
-        #     s.ax.scatter(s.gb.x(), s.gb.y(), s.gb.z(), marker='.', color="green")
-        # else:
-        #     s.ax.scatter(i.x(), i.y(), i.z(), marker='.', color="blue")
-
 
     def updatev(s, i, idx=0):
-        zoffset = -10
-        # s.ax.scatter(i, s.dy, s.dz, marker='.', color="red")
-        # if idx == 0:
-            # for x in s.dx:
-                # s.ax.plot([s.dx[i], s.nx[i]], [s.dy[i], s.ny[i]], zs=[s.dz[i], s.nz[i]], color="red", linewidth=1)
-            # i = i + 1
         oz = s.algp(i.n[idx-1])
         nz = s.algp(i.n[idx])
-        # s.ax.plot([i.n[idx-1].x(), i.n[idx-1].y()], [i.n[idx].x(), i.n[idx].y()], zs=[oz, nz], color="red", linewidth=1)
         s.ax.plot([i.n[idx].x(), i.n[idx-1].x()], [i.n[idx].y(), i.n[idx-1].y()], zs=[nz, oz], color="red", linewidth=1)
-        # s.ax.scatter(s.gb.x, s.gb.y, s.gb.z + zoffset, marker='o', color="green")
         s.sleep()
 
     wc = 0.1
@@ -297,32 +262,6 @@ class Vis3D(object):
     phi_g = 0.1
     v_max = 5
     v_mult = 5
-
-    def calc_vel(s, i):
-        def trim(x):
-            if x > s.v_max:
-                x = s.v_max
-            if x < -s.v_max:
-                x = -s.v_max
-            return x
-        def ru():
-            return random.uniform(0, 1)
-        def cv(v, gx, pi, xi):
-            return -(v * s.wc + ru() * s.phi_p * (pi - xi) + s.phi_g * ru() * (gx - xi))
-
-        i.vx = cv(i.vx, s.gb.x, i.x, s.gb.x)
-        i.vx = trim(i.vx)
-
-        i.vy = cv(i.vy, s.gb.y, i.y, s.gb.y)
-        i.vy = trim(i.vy)
-
-        dvx = i.x + i.vx
-        if dvx > s.plane[0] and dvx < s.plane[1]:
-            dvy = i.y + i.vy
-            if dvy > s.plane[0] and dvy < s.plane[1]:
-                i.dvx = dvx
-                i.dvy = dvy
-                i.dvz = s.alg(i.dvx, i.dvy)
 
     def gen_pop(s):
         s.swarm = []
@@ -335,11 +274,6 @@ class Vis3D(object):
             # s.swarm.append()
             # s.swarm[i].p[2] = s.algp(s.swarm[i])
         return s.swarm
-
-    def pos_better(s, i, idx):
-        i.z = s.alg(i.x, i.y)
-        i.nz = s.alg(i.nx, i.ny)
-        return i.nz <= i.z
 
     def is_out_range(s, x):
         min = s.plane[0]
@@ -358,26 +292,6 @@ class Vis3D(object):
         if x < min:
             return min
         return x
-
-    def calc_np(s, i):
-        nx = i.x + i.vx * s.v_mult
-        if (nx > s.plane[0] and nx < s.plane[1]):
-            i.nx = nx
-        ny = i.y + i.vy * s.v_mult
-        if(ny > s.plane[0] and ny < s.plane[1]):
-            i.ny = ny
-        i.nz = s.alg(i.nx, i.ny)
-        pass
-
-    b_lo = 0
-    b_up = 1
-
-    def gen_vel(s, swarm):
-        for p in swarm:
-            p.vx = random.uniform(s.b_lo, s.b_up)
-            p.vy = random.uniform(s.b_lo, s.b_up)
-            p.vz = s.alg(p.vx, p.vy)
-        pass
 
     def sel_best(s):
         bi = s.swarm[0]
@@ -399,7 +313,7 @@ class Vis3D(object):
 
 class Sphere(Vis3D):
 
-    max_iterations = 30
+    max_iterations = 5
 
     def alg(s, dx, dy):
         return (np.power(dx, 2) + (np.power(dy, 2)))
@@ -409,7 +323,7 @@ class Schwefel(Vis3D):
     Problematic, neads tweaking of params for generating next generation
     """
     plane = [-500, 500, 500]
-    max_iterations = 100
+    # max_iterations = 20
     v_max = 50
     v_mult = 30
 
@@ -476,7 +390,7 @@ class Zakharov(Vis3D):
 
     plane = [-10, 10, 30]
 
-    max_iterations = 30
+    # max_iterations = 20
 
     def alg(s, dx, dy):
         def f1(x):
@@ -495,7 +409,7 @@ class Ackley(Vis3D):
     c = 2 * np.pi
     d = 2
 
-    max_iterations = 50
+    # max_iterations = 20
 
     def alg(s, xi, yi):
         part1 = - s.a * np.exp((-s.b * np.sqrt((1.0 / s.d) * (np.power(xi, 2) + np.power(yi, 2)))))
@@ -507,15 +421,15 @@ class Ackley(Vis3D):
 
 plt.pause(2)
 
-# r = Sphere()
+r = Sphere()
 r = Schwefel()
-# r = Rosenbrock()
-# r = Rastrigin()
-# r = Griewangk()
-# r = Levy()
-# r = Michalewicz()
-# r = Zakharov()
-# r = Ackley()
+r = Rosenbrock()
+r = Rastrigin()
+r = Griewangk()
+r = Levy()
+r = Michalewicz()
+r = Zakharov()
+r = Ackley()
 # r = Vis3D()
 
 exit(0)
