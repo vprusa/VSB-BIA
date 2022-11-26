@@ -66,7 +66,7 @@ def ackley(xi, yi, a, b, c, d):
 class Vis3D(object):
     frameNo = 0
 
-    frameTimeout = 0.5
+    frameTimeout = 0.2
     nxgraphOptions = None
     G = None
     D = None
@@ -80,7 +80,7 @@ class Vis3D(object):
 
     dims = 2
     plane = [-32, 32, 60]
-    points_cnt = 5
+    points_cnt = 10
     max_iterations = 100
 
     a = 20
@@ -94,10 +94,10 @@ class Vis3D(object):
     F = 0.5
     cr = 0.7
 
-    p_len_multiplier_abs = 1
-    p_len_multiplier_rel = 2
+    p_len_multiplier_abs = 1.5
+    p_len_multiplier_rel = 1.5
     p_len = 1
-    step = 0.25
+    step = 0.2
     ptr = 1
 
     swarm = list()
@@ -140,42 +140,29 @@ class Vis3D(object):
                 s.ax.scatter(i.x(), i.y(), i.z(), marker='o', color="blue")
 
                 t = 0
-                t2 = s.step * s.p_len_multiplier_rel
                 t_idx = 0
                 i.n = list()
-                i.n.append(Pt(i.x(), i.y()))
-                behind = False
-                while t <= s.p_len:
+                ptt = Pt(i.x(), i.y())
+                ptt.z(s.algp(ptt))
+                i.n.append(ptt)
+                i.nl = ptt
+                while t <= s.p_len * s.p_len_multiplier_rel:
                     s.set_ptr(i)
                     # update new jump position
-                    # inx_1 = (i.n[t_idx].p[0] + (s.gb.p[0] - i.n[t_idx].p[0]) * t * i.ptr_vec[0]) * s.p_len_multiplier_rel
-                    # iny_1 = (i.n[t_idx].p[1] + (s.gb.p[1] - i.n[t_idx].p[1]) * t * i.ptr_vec[1]) * s.p_len_multiplier_rel
-                    # inx_1 = (i.n[t_idx].p[0] + (s.gb.p[0] - i.n[t_idx].p[0]) * t * i.ptr_vec[0])
-                    # iny_1 = (i.n[t_idx].p[1] + (s.gb.p[1] - i.n[t_idx].p[1]) * t * i.ptr_vec[1])
-                    # inx_1 = (i.n[t_idx].p[0] + (s.gb.p[0] - i.n[t_idx].p[0]) * t * i.ptr_vec[0] * s.p_len_multiplier_rel)
-                    # iny_1 = (i.n[t_idx].p[1] + (s.gb.p[1] - i.n[t_idx].p[1]) * t * i.ptr_vec[1] * s.p_len_multiplier_rel)
+                    inx_1 = (i.n[t_idx].p[0] + (s.gb.p[0] - i.n[0].p[0]) * s.step * i.ptr_vec[0] * s.p_len_multiplier_abs)
+                    iny_1 = (i.n[t_idx].p[1] + (s.gb.p[1] - i.n[0].p[1]) * s.step * i.ptr_vec[1] * s.p_len_multiplier_abs)
 
-                    if behind:
-                        # inx_1 = (i.n[t_idx].p[0] - (i.n[t_idx-2].p[0] - i.n[t_idx-1].p[0]) * t * i.ptr_vec[0] * s.p_len_multiplier_rel)
-                        # iny_1 = (i.n[t_idx].p[1] - (i.n[t_idx-2].p[1] - i.n[t_idx-1].p[1]) * t * i.ptr_vec[1] * s.p_len_multiplier_rel)
-                        inx_1 = (i.n[t_idx].p[0] - (i.n[t_idx - 2].p[0] - i.n[t_idx].p[0]) * t2 * i.ptr_vec[0] * s.p_len_multiplier_rel)
-                        iny_1 = (i.n[t_idx].p[1] - (i.n[t_idx - 2].p[1] - i.n[t_idx].p[1]) * t2 * i.ptr_vec[1] * s.p_len_multiplier_rel)
-                        t2 = t2 + s.step
-                    else:
-                        inx_1 = (i.n[t_idx].p[0] + (s.gb.p[0] - i.n[t_idx].p[0]) * t * i.ptr_vec[0] * s.p_len_multiplier_rel)
-                        iny_1 = (i.n[t_idx].p[1] + (s.gb.p[1] - i.n[t_idx].p[1]) * t * i.ptr_vec[1] * s.p_len_multiplier_rel)
-                    if s.gb.x() == i.n[t_idx].x() and s.gb.y() == i.n[t_idx].y():
-                        behind = True
-
-                    npp = Pt(inx_1, iny_1)
+                    if s.is_out_range(inx_1) or s.is_out_range(iny_1):
+                        break
+                    npp = Pt(s.keep_in_range(inx_1), s.keep_in_range(iny_1))
                     npp.z(s.algp(npp))
                     i.n.append(npp)
                     # calc new jump function value
-                    iz = s.algp(i.n[t_idx])
+                    iz = s.algp(i.nl)
                     inz = s.algp(i.n[t_idx+1])
                     # TODO double check jumps
                     if inz < iz:
-                        i.n[0] = i.n[t_idx+1]
+                        i.nl = i.n[t_idx+1]
                     s.updatev(i, t_idx+1)
                     t_idx = t_idx + 1
                     t = t + s.step
@@ -190,6 +177,9 @@ class Vis3D(object):
                 #     s.ax.scatter(i.x(), i.y(), i.z(), marker='.', color="blue")
 
                 idx = idx + 1
+            s.sleep()
+            s.best_in_swarm()
+            Vis3D.plt.pause(2)
 
             s.ax.clear()
             s.vis_base()
@@ -203,6 +193,16 @@ class Vis3D(object):
         s.g = s.g + 1
         Vis3D.plt.pause(2)
         s.plt.clf()
+
+    def best_in_swarm(s):
+        new_swarm = list()
+        for i in s.swarm:
+            new_swarm.append(i.nl)
+            s.ax.scatter(i.nl.x(), i.nl.y(), i.nl.z(), marker='o', color="black")
+
+            if i.nl.z() < s.gb.z():
+                s.gb = i.nl
+        s.swarm = new_swarm
 
     def set_ptr(s, i):
         i.ptr_vec[0] = 1
@@ -340,6 +340,24 @@ class Vis3D(object):
         i.z = s.alg(i.x, i.y)
         i.nz = s.alg(i.nx, i.ny)
         return i.nz <= i.z
+
+    def is_out_range(s, x):
+        min = s.plane[0]
+        max = s.plane[1]
+        if x > max:
+            return True
+        if x < min:
+            return True
+        return False
+
+    def keep_in_range(s, x):
+        min = s.plane[0]
+        max = s.plane[1]
+        if x > max:
+            return max
+        if x < min:
+            return min
+        return x
 
     def calc_np(s, i):
         nx = i.x + i.vx * s.v_mult
@@ -489,8 +507,8 @@ class Ackley(Vis3D):
 
 plt.pause(2)
 
-r = Sphere()
-# r = Schwefel()
+# r = Sphere()
+r = Schwefel()
 # r = Rosenbrock()
 # r = Rastrigin()
 # r = Griewangk()
