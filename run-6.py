@@ -41,7 +41,10 @@ class Pt(object):
 
     def z(s, v=None):
         if v is not None:
-            s.p[2] = v
+            if len(s.p) <= 2:
+                s.p.append(v)
+            else:
+                s.p[2] = v
         return s.p[2]
 
     def __init__(self, xx, yy):
@@ -63,7 +66,7 @@ def ackley(xi, yi, a, b, c, d):
 class Vis3D(object):
     frameNo = 0
 
-    frameTimeout = 0.025
+    frameTimeout = 0.5
     nxgraphOptions = None
     G = None
     D = None
@@ -91,8 +94,10 @@ class Vis3D(object):
     F = 0.5
     cr = 0.7
 
-    p_len = 5
-    step = 1
+    p_len_multiplier_abs = 1
+    p_len_multiplier_rel = 2
+    p_len = 1
+    step = 0.25
     ptr = 1
 
     swarm = list()
@@ -124,7 +129,7 @@ class Vis3D(object):
         s.M_max = s.max_iterations
         Vis3D.plt.pause(1)
         s.updatep()
-
+        # s.p_len = ( s.plane[1] - s.plane[0] ) * s.p_len_multiplier_abs
 
         # while m < M_max :
         while s.m < s.M_max:
@@ -135,22 +140,43 @@ class Vis3D(object):
                 s.ax.scatter(i.x(), i.y(), i.z(), marker='o', color="blue")
 
                 t = 0
+                t2 = s.step * s.p_len_multiplier_rel
                 t_idx = 0
                 i.n = list()
                 i.n.append(Pt(i.x(), i.y()))
+                behind = False
                 while t <= s.p_len:
                     s.set_ptr(i)
                     # update new jump position
-                    inx_1 = i.n[t_idx].p[0] + (s.gb.p[0] - i.n[t_idx].p[0]) * t * i.ptr_vec[0]
-                    iny_1 = i.n[t_idx].p[1] + (s.gb.p[1] - i.n[t_idx].p[1]) * t * i.ptr_vec[1]
-                    i.n.append(Pt(inx_1, iny_1))
+                    # inx_1 = (i.n[t_idx].p[0] + (s.gb.p[0] - i.n[t_idx].p[0]) * t * i.ptr_vec[0]) * s.p_len_multiplier_rel
+                    # iny_1 = (i.n[t_idx].p[1] + (s.gb.p[1] - i.n[t_idx].p[1]) * t * i.ptr_vec[1]) * s.p_len_multiplier_rel
+                    # inx_1 = (i.n[t_idx].p[0] + (s.gb.p[0] - i.n[t_idx].p[0]) * t * i.ptr_vec[0])
+                    # iny_1 = (i.n[t_idx].p[1] + (s.gb.p[1] - i.n[t_idx].p[1]) * t * i.ptr_vec[1])
+                    # inx_1 = (i.n[t_idx].p[0] + (s.gb.p[0] - i.n[t_idx].p[0]) * t * i.ptr_vec[0] * s.p_len_multiplier_rel)
+                    # iny_1 = (i.n[t_idx].p[1] + (s.gb.p[1] - i.n[t_idx].p[1]) * t * i.ptr_vec[1] * s.p_len_multiplier_rel)
+
+                    if behind:
+                        # inx_1 = (i.n[t_idx].p[0] - (i.n[t_idx-2].p[0] - i.n[t_idx-1].p[0]) * t * i.ptr_vec[0] * s.p_len_multiplier_rel)
+                        # iny_1 = (i.n[t_idx].p[1] - (i.n[t_idx-2].p[1] - i.n[t_idx-1].p[1]) * t * i.ptr_vec[1] * s.p_len_multiplier_rel)
+                        inx_1 = (i.n[t_idx].p[0] - (i.n[t_idx - 2].p[0] - i.n[t_idx].p[0]) * t2 * i.ptr_vec[0] * s.p_len_multiplier_rel)
+                        iny_1 = (i.n[t_idx].p[1] - (i.n[t_idx - 2].p[1] - i.n[t_idx].p[1]) * t2 * i.ptr_vec[1] * s.p_len_multiplier_rel)
+                        t2 = t2 + s.step
+                    else:
+                        inx_1 = (i.n[t_idx].p[0] + (s.gb.p[0] - i.n[t_idx].p[0]) * t * i.ptr_vec[0] * s.p_len_multiplier_rel)
+                        iny_1 = (i.n[t_idx].p[1] + (s.gb.p[1] - i.n[t_idx].p[1]) * t * i.ptr_vec[1] * s.p_len_multiplier_rel)
+                    if s.gb.x() == i.n[t_idx].x() and s.gb.y() == i.n[t_idx].y():
+                        behind = True
+
+                    npp = Pt(inx_1, iny_1)
+                    npp.z(s.algp(npp))
+                    i.n.append(npp)
                     # calc new jump function value
                     iz = s.algp(i.n[t_idx])
                     inz = s.algp(i.n[t_idx+1])
                     # TODO double check jumps
                     if inz < iz:
-                        i.n[0] = i.n[t_idx + 1]
-                    s.updatev(i, t_idx)
+                        i.n[0] = i.n[t_idx+1]
+                    s.updatev(i, t_idx+1)
                     t_idx = t_idx + 1
                     t = t + s.step
                     # TODO visualize here lines
