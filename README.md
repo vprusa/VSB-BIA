@@ -65,12 +65,15 @@ Run:
 ```
 
 
-## 1
+## 1. Hill climbing (2 body)
 
 ![./1.gif](./1.gif)
 
+## 2. Simulated annealing (3 body)
 
-## 3
+![./2.gif](./2.gif)
+
+## 3. Genetic algorithm used to solve Traveling Salesman Problem (TSP) (8 p)
 
 ![./3.gif](./3.gif)
 
@@ -79,21 +82,26 @@ Run:
 ![./3.jpg](./3.jpg)
 
 
-## 4
+## 4. Differential evolution (8 p)
 
 ![./4.gif](./4.gif)
 
 
-## 5
+## 5. Particle Swarm Optimization with inertia weight (8 p)
 
 ![./5.gif](./5.gif)
 ![./5.2.gif](./5.2.gif)
 ![./5.3.gif](./5.3.gif)
 
 
-## 6
+## 6. Self-organizing Migration Algorithm - AllToOne (8 p)
 
 ![./6.gif](./6.gif)
 
-Note:
+## 7. And Colony Optimization applied to Travelling Salesman Problem (TSP) (8 p)
+
+![./7.gif](./7.gif)
+
+
+## Note:
 https://github.com/vprusa/VSB-BIA/tree/devel
