@@ -56,7 +56,7 @@ class Vis2D(object):
     # NP = 6  # population cnt
     # DC = 6  # In TSP, it will be a number of cities
     NP = 3  # population cnt
-    DC = 3  # In TSP, it will be a number of cities
+    DC = 4  # In TSP, it will be a number of cities
 
     figsize = (10, 6)
     # NP = 20  # population cnt
@@ -82,15 +82,25 @@ class Vis2D(object):
         else:
             s.G = nx.from_edgelist(ast.literal_eval(s.graphData))
         # generates random weights to graph
+        # poss = ((100,100), (400,100), (100,400), (400,400))
+        poss = ((100,100), (300,100), (100,200), (400,400))
+        idx = 0
         for (u, v) in s.G.nodes(data=True):
-            v['pos'] = (random.randint(s.distances[0], s.distances[1]), random.randint(s.distances[0], s.distances[1]))
+            # v['pos'] = (random.randint(s.distances[0], s.distances[1]), random.randint(s.distances[0], s.distances[1]))
+            v['pos'] = poss[idx]
+            idx = idx + 1
+
+        # for (u, v) in s.G.nodes(data=True):
+        #     v['pos'] = (random.randint(s.distances[0], s.distances[1]), random.randint(s.distances[0], s.distances[1]))
         for (u, v, w) in s.G.edges(data=True):
             # w['weight'] = (random.randint(1, 40))
             u1 = s.G.nodes()[u]['pos']
             v1 = s.G.nodes()[v]['pos']
             real_dist = np.sqrt(np.power(u1[0]-v1[0], 2) + np.power(u1[1]-v1[1], 2))
             w['weight'] = int(real_dist)
-            w['fer'] = 0
+            w['fer_n'] = 0
+            w['fer_n_sum'] = 0
+            w['fer_o'] = 0
 
         # or load graph with weights them directly...
         # s.G = nx.from_edgelist(list(
@@ -156,7 +166,20 @@ class Vis2D(object):
         s.show_path(s.min_individual, color=color, w=1)
         s.plt.pause(s.frameTimeout)
 
-    def show_path(s, ga, ars = '->', color = 'k', w = None, draw = True):
+
+    def show_sum_feromon(s):
+        # s.np_sum2 = list(s.G.edges(data=True))
+        # edges = s.G.edges()
+        # nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=e, width=w, arrowstyle=ars, arrows=True, edge_color=color)
+        # nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=edges, width=s.idx_weights[:len(edges)] ) # , ax=s.ax, arrowstyle='->', arrowsize=10
+        # nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=edges, width=s.idx_weights[:len(edges)] ) # , ax=s.ax, arrowstyle='->', arrowsize=10
+        # weights = list(map(lambda x: x[2]['fer_n_sum'] / 100 if x[2]['fer_n_sum'] != 0 else 0, list(s.G.edges(data=True))))
+        # weights = list(map(lambda x: x[2]['fer_n_sum'] if x[2]['fer_n_sum'] != 0 else 0, list(s.G.edges(data=True))))
+        weights = list(map(lambda x: x[2]['fer_n_sum'] if x[2]['fer_n_sum'] != 0 else 0, list(s.G.edges(data=True))))
+        nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=list(s.G.edges()), width=weights, edge_color='red')
+        pprint(list(s.G.edges(data=True)))
+
+    def show_path(s, ga, ars='->', color='k', w=None, draw=True):
         ea = s.get_edges(ga)
         if draw:
             for e in ea:
@@ -175,7 +198,26 @@ class Vis2D(object):
             sum = sum + s.G[g[i]][g[i + 1]]['weight']
         return sum
 
+    vap_const = 0.5
+    vap_sum_const = 0.95
+
     def vaporize_paths(s):
+        # sum feromon intenzities of whole graph to single
+        s.np_sum = s.np[0].copy()
+
+        for i in range(1, len(s.np)):
+            for ii in s.np[i]:
+                s.np_sum[ii] = s.np_sum[ii] + s.np[i][ii]
+
+        # besti, best = s.get_best_paths_rel_fer()
+        # vaporize all paths
+        for i in range(1, len(s.np_sum)):
+            s.np_sum[i] = s.np_sum[i] * s.vap_const
+
+        # for i in range(0,len(list(s.G.edges()))-1):
+        #     i2 = (i+1) % len(list(s.G.edges()))
+        #     s.G.get_edge_data(i, i2)['fer_n_sum'] = s.G.get_edge_data(i, i2)['fer_n_sum'] * s.vap_sum_const
+
         return 0
 
     def set_edge_pheromone(s, int):
@@ -192,8 +234,6 @@ class Vis2D(object):
 
     max_w = 10000000
 
-    colors = ['red', 'blue', 'green']
-
     def get_some_paths_rel_fer(s, best=True):
         extreme = 0
         if not best:
@@ -201,18 +241,18 @@ class Vis2D(object):
         if (len(s.op) == 0):
             return -1, extreme
         min_idx = 0
-        for i in range(0, len(s.op)):
+        for i in range(0, len(s.op)-1):
             ap = s.op[i]
             sum = 0
             for pi in range(0, len(ap)-1):
-                ni = ((pi + 1) % len(ap))
-                sum = sum + s.G.get_edge_data(ap[i], ap[ni])['weight']
+                ni = ((pi+1) % len(ap))
+                sum = sum + s.G.get_edge_data(ap[pi], ap[ni])['weight']
             # sum = sum + s.G.get_edge_data(ap[0], len(ap)-1)['weight']
 
-            if best and sum < extreme:
+            if best and sum > extreme:
                 extreme = sum
                 min_idx = i
-            elif not best and sum > extreme:
+            elif not best and sum < extreme:
                 extreme = sum
                 min_idx = i
         return min_idx, extreme
@@ -232,14 +272,16 @@ class Vis2D(object):
         #     cur_node = path[pi]
         #     ni = (pi+1) % len(path)
         #     next_node = path[ni]
-        old_w = s.G.get_edge_data(cur_node, next_node)['fer']
         # delta = s.get_all_feromon_weight()
         besti, best = s.get_best_paths_rel_fer()
         worsti, worst = s.get_worst_paths_rel_fer()
         if best == 0 or worst == s.max_w:
             return 0
+        old_w = s.G.get_edge_data(cur_node, next_node)['fer_o']
         new_w = old_w + ((s.feromon_const * best) / worst)
-        s.G.get_node_data(cur_node, next_node)['fer'] = new_w
+        s.G.get_edge_data(cur_node, next_node)['fer_n'] = new_w
+        s.G.get_edge_data(cur_node, next_node)['fer_n_sum'] = s.G.get_edge_data(cur_node, next_node)['fer_n_sum'] + new_w
+        s.G.get_edge_data(cur_node, next_node)['fer_n_sum'] = s.G.get_edge_data(cur_node, next_node)['fer_n_sum'] * s.vap_sum_const
         return new_w
 
     def walk_path(s, ant):
@@ -252,10 +294,10 @@ class Vis2D(object):
         path.append(cur_node)
         for i in range(0, s.DC-1):
             # next_node = s.sel_next_node(i, cur_node)
-            next_node = random.randint(0, s.NP - 1)
+            next_node = random.randint(0, s.DC - 1)
             while next_node in path:
                 # next_node = s.sel_next_node(i, cur_node)
-                next_node = random.randint(0, s.NP - 1)
+                next_node = random.randint(0, s.DC - 1)
             # s.update_feromon(next_node)
             s.update_feromon(cur_node, next_node)
             cur_node = next_node
@@ -286,14 +328,22 @@ class Vis2D(object):
                 new_path = s.walk_path(ai)
                 s.np.append(new_path)
                 # s.show_ant_path(i, color='orange')
-                width_a = (s.NP - ai) * 2
+                width_a = np.power(((s.NP - ai)),1.5)
+                # width_a = ((s.NP - ai)*1.5)
                 col = s.colors[ai]
-                color = matplotlib.colors.to_rgba((col[0], col[1], col[2], 0.5), alpha=0.5)
+                color = matplotlib.colors.to_rgba((col[0], col[1], col[2], 0.5), alpha=1.0)
                 # s.show_path(new_path, color=s.colors[ai], w=width)
                 s.show_path(new_path, color=color, w=width_a)
-                s.plt.pause(1)
+                s.plt.pause(0.5)
 
             s.vaporize_paths()
+            color = matplotlib.colors.to_rgba((0, 0, 0, 0.6), alpha=0.3)
+            s.op = s.np
+            s.update()
+            besti, best = s.get_best_paths_rel_fer()
+            s.show_sum_feromon()
+            s.show_path(s.op[besti], color='green', w=1)
+            s.plt.pause(1)
             s.update()
 
             # s.show_min_path(color='green')
@@ -355,7 +405,7 @@ class Vis2D(object):
         nx.draw_networkx_nodes(s.G, pos=s.layout, nodelist=set(filter(lambda i: i == s.start_node, s.G.nodes())), node_color="green", ax=s.ax)
 
         if (null_nodes is not None):
-            null_nodes.set_edgecolor("black")
+            null_nodes.set_edgecolor("gray")
             nullNodesIds = set(s.G.nodes()) - set(forestNodes)
             # dbg("nullNodes", nullNodes)
             nx.draw_networkx_labels(s.G, pos=s.layout, labels=dict(zip(nullNodesIds, nullNodesIds)),
