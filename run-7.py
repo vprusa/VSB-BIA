@@ -186,12 +186,14 @@ class Vis2D(object):
     def get_best_paths_rel_fer(s):
         return s.get_some_paths_rel_fer()
 
+    max_w = 10000000
+
     def get_some_paths_rel_fer(s, best=True):
-        if(len(s.op) == 0):
-            return 0
         extreme = 0
         if not best:
-            extreme = 10000000 # TODO const inf...
+            extreme = s.max_w  # TODO const inf...
+        if (len(s.op) == 0):
+            return -1, extreme
         min_idx = 0
         for i in range(0, len(s.op)):
             ap = s.op[i]
@@ -213,37 +215,42 @@ class Vis2D(object):
 
     def sel_next_node(s, i, cur):
         # return random.choice(s.G.nodes())
-        return random.randint(0, s.NP)
+        return random.randint(0, s.NP-1)
 
     feromon_const = 0.5
 
-    # def update_feromon(s, cur_node, next_node):
-    def update_feromon(s, path):
-        for pi in range(0, len(path)):
-            cur_node = path[pi]
-            ni = (pi+1) % len(path)
-            next_node = path[ni]
-            old_w = s.G.get_node_data(cur_node, next_node)['weight']
-            # delta = s.get_all_feromon_weight()
-            besti, best = s.get_best_paths_rel_fer()
-            worsti, worst = s.get_worst_paths_rel_fer()
-            if best == 0 or worst == 0:
-                return 0
-            new_w = old_w + ((s.feromon_const * best) / worst)
-            s.G.get_node_data(cur_node, next_node)['weight'] = new_w
+    def update_feromon(s, cur_node, next_node):
+    # def update_feromon(s, path):
+        # for pi in range(0, len(path)):
+        #     cur_node = path[pi]
+        #     ni = (pi+1) % len(path)
+        #     next_node = path[ni]
+        old_w = s.G.get_edge_data(cur_node, next_node)['weight']
+        # delta = s.get_all_feromon_weight()
+        besti, best = s.get_best_paths_rel_fer()
+        worsti, worst = s.get_worst_paths_rel_fer()
+        if best == 0 or worst == s.max_w:
+            return 0
+        new_w = old_w + ((s.feromon_const * best) / worst)
+        s.G.get_node_data(cur_node, next_node)['weight'] = new_w
         return new_w
 
     def walk_path(s, ant):
         # at start position
         # pick edge depending on probability calculated with pheromone intensities
         path = list()
-        cur_node = s.G.nodes()[0]
+        # cur_node = s.G.nodes()[0]
+        cur_node = 0
         for i in range(0, s.DC-2):
             path.append(cur_node)
-            next_node = s.sel_next_node(i, cur_node)
+            # next_node = s.sel_next_node(i, cur_node)
+            next_node = random.randint(0, s.NP - 1)
             while next_node in path:
-                next_node = s.sel_next_node(i, cur_node)
-            s.update_feromon(next_node)
+                # next_node = s.sel_next_node(i, cur_node)
+                next_node = random.randint(0, s.NP - 1)
+            # s.update_feromon(next_node)
+            s.update_feromon(cur_node, next_node)
+            cur_node = next_node
 
         return path
 
