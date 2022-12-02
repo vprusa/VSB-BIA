@@ -52,9 +52,12 @@ class Vis2D(object):
     # D = 20  # In TSP, it will be a number of cities
     nxgraphType = "complete_graph"
 
-    NP = 6  # population cnt
     GC = 20  # generation cnt
-    DC = 6  # In TSP, it will be a number of cities
+    # NP = 6  # population cnt
+    # DC = 6  # In TSP, it will be a number of cities
+    NP = 3  # population cnt
+    DC = 3  # In TSP, it will be a number of cities
+
     figsize = (10, 6)
     # NP = 20  # population cnt
     # GC = 40  # generation cnt
@@ -87,6 +90,7 @@ class Vis2D(object):
             v1 = s.G.nodes()[v]['pos']
             real_dist = np.sqrt(np.power(u1[0]-v1[0], 2) + np.power(u1[1]-v1[1], 2))
             w['weight'] = int(real_dist)
+            w['fer'] = 0
 
         # or load graph with weights them directly...
         # s.G = nx.from_edgelist(list(
@@ -161,7 +165,7 @@ class Vis2D(object):
                 else:
                     # ew = s.idx_weights[:len(ga)]
                     ew = 1
-                nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=e, width=ew, arrowstyle=ars, arrows=True, edge_color=color)
+                nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=e, width=w, arrowstyle=ars, arrows=True, edge_color=color)
                 s.show_axes()
         return ga
 
@@ -188,6 +192,8 @@ class Vis2D(object):
 
     max_w = 10000000
 
+    colors = ['red', 'blue', 'green']
+
     def get_some_paths_rel_fer(s, best=True):
         extreme = 0
         if not best:
@@ -199,8 +205,9 @@ class Vis2D(object):
             ap = s.op[i]
             sum = 0
             for pi in range(0, len(ap)-1):
-                sum = sum + s.G.get_edge_data(ap[i])['weight']
-            sum = sum + s.G.get_edge_data(ap[0], len(ap)-1)['weight']
+                ni = ((pi + 1) % len(ap))
+                sum = sum + s.G.get_edge_data(ap[i], ap[ni])['weight']
+            # sum = sum + s.G.get_edge_data(ap[0], len(ap)-1)['weight']
 
             if best and sum < extreme:
                 extreme = sum
@@ -225,14 +232,14 @@ class Vis2D(object):
         #     cur_node = path[pi]
         #     ni = (pi+1) % len(path)
         #     next_node = path[ni]
-        old_w = s.G.get_edge_data(cur_node, next_node)['weight']
+        old_w = s.G.get_edge_data(cur_node, next_node)['fer']
         # delta = s.get_all_feromon_weight()
         besti, best = s.get_best_paths_rel_fer()
         worsti, worst = s.get_worst_paths_rel_fer()
         if best == 0 or worst == s.max_w:
             return 0
         new_w = old_w + ((s.feromon_const * best) / worst)
-        s.G.get_node_data(cur_node, next_node)['weight'] = new_w
+        s.G.get_node_data(cur_node, next_node)['fer'] = new_w
         return new_w
 
     def walk_path(s, ant):
@@ -241,8 +248,9 @@ class Vis2D(object):
         path = list()
         # cur_node = s.G.nodes()[0]
         cur_node = 0
-        for i in range(0, s.DC-2):
-            path.append(cur_node)
+        # path.append(cur_node)
+        path.append(cur_node)
+        for i in range(0, s.DC-1):
             # next_node = s.sel_next_node(i, cur_node)
             next_node = random.randint(0, s.NP - 1)
             while next_node in path:
@@ -251,6 +259,7 @@ class Vis2D(object):
             # s.update_feromon(next_node)
             s.update_feromon(cur_node, next_node)
             cur_node = next_node
+            path.append(cur_node)
 
         return path
 
@@ -262,22 +271,34 @@ class Vis2D(object):
         # s.population = list()
         # for i in range(0, s.NP):
         #     s.population.append(s.random_circle(list(s.G.nodes())))
+        s.colors = list()
+        for i in range(0,s.NP):
+            r = random.randint(0, 255) / 255.0
+            g = random.randint(0, 255) / 255.0
+            b = random.randint(0, 255) / 255.0
+            rgb = [r, g, b]
+            s.colors.append(rgb)
         s.np = list()
         s.op = list()
         for i in range(0, s.GC):
             # for each ant find path
             for ai in range(0, s.NP):
                 new_path = s.walk_path(ai)
-                np.append(new_path)
+                s.np.append(new_path)
                 # s.show_ant_path(i, color='orange')
-                s.show_path(new_path, color='orange', w=1)
-                s.plt.sleep(1)
+                width_a = (s.NP - ai) * 2
+                col = s.colors[ai]
+                color = matplotlib.colors.to_rgba((col[0], col[1], col[2], 0.5), alpha=0.5)
+                # s.show_path(new_path, color=s.colors[ai], w=width)
+                s.show_path(new_path, color=color, w=width_a)
+                s.plt.pause(1)
 
             s.vaporize_paths()
+            s.update()
 
-            s.show_min_path(color='green')
+            # s.show_min_path(color='green')
 
-        s.show_min_path(color='red')
+        # s.show_min_path(color='red')
         s.plt.pause(10)
         pass
 
