@@ -1,438 +1,383 @@
-from random import random
+try:
+    import seaborn as sns
+    pass
+except UserWarning:
+    pass
+import matplotlib.animation ; matplotlib.use("TkAgg")
 
-from base import *
-import numpy as np
+import networkx as nx
+from pprint import pprint
 import random
+import matplotlib.pyplot as plt
+import numpy as np
+from base import *
+import ast
 
 try:
     import seaborn as sns
 except UserWarning:
     pass
-import matplotlib.animation ; matplotlib.use("TkAgg")
+import matplotlib.animation
+import random
 
-import matplotlib.pyplot as plt
+matplotlib.use("TkAgg")
 
-class Pt(object):
-    # x = 0
-    # y = 0
-    # z = 0
-    # p = list()
-    # vx = 0
-    # vy = 0
-    # vz = 0
-
-    # n = list()
-
-    # nx = 0
-    # ny = 0
-    # nz = 0
-
-    # PTR vector
-
-    def x(s, v=None):
-        if v is not None:
-            s.p[0] = v
-        return s.p[0]
-
-    def y(s, v=None):
-        if v is not None:
-            s.p[1] = v
-        return s.p[1]
-
-    def z(s, v=None):
-        if v is not None:
-            if len(s.p) <= 2:
-                s.p.append(v)
-            else:
-                s.p[2] = v
-        return s.p[2]
-
-    def __init__(self, xx, yy):
-        # s.x(xx)
-        # s.y(yy)
-        self.ptr_vec = [1, 1]
-
-        self.n = list()
-        self.p = list()
-        self.p.append(xx)
-        self.p.append(yy)
-
-def ackley(xi, yi, a, b, c, d):
-    part1 = - a * np.exp((-b * np.sqrt((1.0 / d) * (np.power(xi, 2) + np.power(yi, 2)))))
-    part2 = - np.exp((1.0 / d) * (np.cos(c * xi) + np.cos(c * yi)))
-    return part1 + part2 + a + np.exp(1)
-    # return (100 * np.power((xi - np.power(yi, 2)), 2) + np.power((yi - 1), 2))
-
-class Vis3D(object):
+class Vis2D(object):
     frameNo = 0
+    min_individual_price = 0
 
-    frameTimeout = 0.001
+    frameTimeout = 0.1
+    # nxgraphType = "cubical_graph"
     nxgraphOptions = None
+    graphData = None
     G = None
     D = None
     plt = None
     layout = None
-    fig = None
 
-    dx = None
-    dy = None
-    dz = None
+    g1 = list()  # generation
+    g2 = list()  # generation
+    # ng = list()  # next generation
 
-    dims = 2
-    plane = [-32, 32, 60]
-    points_cnt = 6
-    max_iterations = 4
 
-    g = 0
+    cg = list(list())
+    ng = list(list())
 
-    p_len_multiplier_abs = 1.5
-    p_len_multiplier_rel = 1.5
-    p_len = 1
-    step = 0.25
-    ptr = 1
+    distances = (0,500)
 
-    swarm = list()
+    start_node = 0
 
-    def __init__(s):
-        Vis3D.plt = plt
-        Vis3D.frameNo = 0
+    # NP = 20
+    # G = 200
+    # D = 20  # In TSP, it will be a number of cities
+    nxgraphType = "complete_graph"
 
-        s.d = len(s.plane) - 1
-        s.m = 0
+    NP = 6  # population cnt
+    GC = 20  # generation cnt
+    DC = 6  # In TSP, it will be a number of cities
+    figsize = (10, 6)
+    # NP = 20  # population cnt
+    # GC = 40  # generation cnt
+    # DC = 8  # In TSP, it will be a number of cities
+    # figsize = (6, 4)
 
-        if Vis3D.fig is None:
-            Vis3D.fig = plt.figure("BIA - 6. Self-organizing Migration Algorithm - AllToOne")
+    population = None
 
-            Vis3D.plt.clf()
-
-        ax = Vis3D.plt.axes(projection='3d')
-        s.ax = ax
-        s.ax.view_init(elev=270., azim=0)
-        s.vis_base()
-        s.update()
-
-        # swarm = Generate pop_size random individuals (you can use the class Solution mentioned in Exercise 1)
-        s.gen_pop()
-        # gBest = Select the best individual from the population
-        s.bg_idx = s.sel_best()
-        s.gb = s.swarm[s.bg_idx]
-        # For each particle, generate velocity vector v
-        s.m = 0
-        s.M_max = s.max_iterations
-        Vis3D.plt.pause(1)
-        s.updatep()
-        # s.p_len = ( s.plane[1] - s.plane[0] ) * s.p_len_multiplier_abs
-
-        # while m < M_max :
-        while s.m < s.M_max:
-            # for each i, x in enumerate(swarm):
-            s.ax.scatter(s.gb.x(), s.gb.y(), s.gb.z(), marker='.', color="green")
-            idx = 0
-            for i in s.swarm:
-                s.ax.scatter(i.x(), i.y(), i.z(), marker='o', color="blue")
-
-                t = 0
-                t_idx = 0
-                i.n = list()
-                ptt = Pt(i.x(), i.y())
-                ptt.z(s.algp(ptt))
-                i.n.append(ptt)
-                i.nl = ptt
-                while t <= s.p_len * s.p_len_multiplier_rel:
-                    s.set_ptr(i)
-                    # update new jump position
-                    inx_1 = (i.n[t_idx].p[0] + (s.gb.p[0] - i.n[0].p[0]) * s.step * i.ptr_vec[0] * s.p_len_multiplier_abs)
-                    iny_1 = (i.n[t_idx].p[1] + (s.gb.p[1] - i.n[0].p[1]) * s.step * i.ptr_vec[1] * s.p_len_multiplier_abs)
-
-                    if s.is_out_range(inx_1) or s.is_out_range(iny_1):
-                        break
-                    npp = Pt(s.keep_in_range(inx_1), s.keep_in_range(iny_1))
-                    npp.z(s.algp(npp))
-                    i.n.append(npp)
-                    # calc new jump function value
-                    iz = s.algp(i.nl)
-                    inz = s.algp(i.n[t_idx+1])
-                    # TODO double check jumps
-                    if inz < iz:
-                        i.nl = i.n[t_idx+1]
-                    s.updatev(i, t_idx+1)
-                    t_idx = t_idx + 1
-                    t = t + s.step
-                    # TODO visualize here lines
-                s.update()
-                s.updatep()
-                s.ax.scatter(s.gb.x(), s.gb.y(), s.gb.z(), marker='.', color="green")
-
-                idx = idx + 1
-            s.sleep()
-            s.best_in_swarm()
-            Vis3D.plt.pause(2)
-
-            s.ax.clear()
-            s.vis_base()
-            s.update()
-            s.m = s.m + 1
-
-        s.update()
-        s.g = s.g + 1
-        Vis3D.plt.pause(2)
-        s.plt.clf()
-
-    def best_in_swarm(s):
-        new_swarm = list()
-        for i in s.swarm:
-            new_swarm.append(i.nl)
-            s.ax.scatter(i.nl.x(), i.nl.y(), i.nl.z(), marker='o', color="black")
-
-            if i.nl.z() < s.gb.z():
-                s.gb = i.nl
-        s.swarm = new_swarm
-
-    def set_ptr(s, i):
-        i.ptr_vec[0] = 1
-        i.ptr_vec[1] = 1
-        # rnd_j = random.choice([0, 1])
-        # for idx in range(0, len(i.ptr_vec)):
-        #     if rnd_j < s.ptr:
-        #         i.ptr_vec[idx] = rnd_j
-        #     else:
-        #         i.ptr_vec[idx] = 0
-
-    def algp(s, p):
-        return s.alg(p.x(), p.y())
-
-    def alg(s, dx, dy):
-        return ackley(dx, dy, s.a, s.b, s.c, s.d)
-
-    def cmp(s, oldx, oldy, newx, newy):
-        newz = s.alg(newx, newy)
-        oldz = s.alg(oldx, oldy)
-        if oldz < newz:
-            return oldx, oldy
+    def __init__(s, nxgraphType=None, nxgraphOptions=None, graphData=None):
+        if nxgraphType is not None:
+            s.nxgraphType = nxgraphType
+        s.nxgraphOptions = nxgraphOptions
+        s.graphData = graphData
+        if graphData is None:
+            if nxgraphOptions is None:
+                if s.nxgraphType == "complete_graph":
+                    s.G = nx.complete_graph(s.DC)
+                else:
+                    s.G = getattr(nx, s.nxgraphType)()
+            else:
+                s.G = getattr(nx, s.nxgraphType)(s.nxgraphOptions)
         else:
-            return newx, newy
+            s.G = nx.from_edgelist(ast.literal_eval(s.graphData))
+        # generates random weights to graph
+        for (u, v) in s.G.nodes(data=True):
+            v['pos'] = (random.randint(s.distances[0], s.distances[1]), random.randint(s.distances[0], s.distances[1]))
+        for (u, v, w) in s.G.edges(data=True):
+            # w['weight'] = (random.randint(1, 40))
+            u1 = s.G.nodes()[u]['pos']
+            v1 = s.G.nodes()[v]['pos']
+            real_dist = np.sqrt(np.power(u1[0]-v1[0], 2) + np.power(u1[1]-v1[1], 2))
+            w['weight'] = int(real_dist)
 
-    def vis_base(s):
-        s.x = np.linspace(s.plane[0], s.plane[1], s.plane[2])
-        s.y = np.linspace(s.plane[0], s.plane[1], s.plane[2])
+        # or load graph with weights them directly...
+        # s.G = nx.from_edgelist(list(
+        #     [(0, 1, {'weight': 15}), (0, 3, {'weight': 34}), (0, 4, {'weight': 25}), (1, 2, {'weight': 5}),
+        #      (1, 7, {'weight': 23}), (2, 3, {'weight': 33}), (2, 6, {'weight': 29}), (3, 5, {'weight': 13}),
+        #      (4, 5, {'weight': 5}), (4, 7, {'weight': 20}), (5, 6, {'weight': 38}), (6, 7, {'weight': 3})]
+        #     ))
 
-        s.a = 20
-        s.b = 0.2
-        s.c = 2 * np.pi
-        s.d = 2
-        s.X, s.Y = np.meshgrid(s.x, s.y)
-        s.Z = s.alg(s.X, s.Y)
 
-        s.ax.plot_wireframe(s.X, s.Y, s.Z, cmap="coolwarm", zorder=1, linewidth=1)
-        # s.ax.plot_surface(s.X, s.Y, s.Z, cmap="coolwarm", zorder=1, linewidth=1)
-        s.ax.set_xlabel('x')
-        s.ax.set_ylabel('y')
-        s.ax.set_zlabel('z')
+        s.plt = plt
+        # s.fig, s.ax = plt.fig("BIA - #3 - Genetic alg. on Traveling Salesman Problem (TSP) ", figsize=s.figsize)
+        s.fig, s.ax = plt.subplots()
+        # s.fig, s.ax = plt.subplots()
+        s.idx_weights = range(2, 30, 1)
+
+        # s.layout = nx.circular_layout(s.G)
+        # list(map(lambda x: x[1]['pos'],s.G.nodes(data=True)))
+        pos = {point: point for point in list(map(lambda x: x[1]['pos'], s.G.nodes(data=True)))}
+        s.layout = list(pos)
+        # s.fig = s.plt.figure("BIA - #3 - Genetic alg. on Traveling Salesman Problem (TSP) ", figsize=s.figsize)
+        # s.fig.set_title("BIA - #3 - Genetic alg. on Traveling Salesman Problem (TSP) ")
+        # s.ax = s.plt.axes()
+        # s.plt.axis("on")
+        s.ax.set_xlim(s.distances[0], s.distances[1])
+        s.ax.set_ylim(s.distances[0], s.distances[1])
+        s.ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
+
+        s.update()
+        s.plt.pause(1)
+
+
+    def f(s, i):
+        """
+            price function, idk why it is called 'f()' in this case,
+            but for sake of balancing readeability and documentation
+            I use internal function 'price()' (note: should I rename to 'cost()'?)
+        """
+        return s.price(i)
+
+    def show_min_path(s, color='blue'):
+        # eval final population
+        s.min_individual = s.population[0]
+        Vis2D.min_individual_price = s.f(s.min_individual)
+        for i in range(1, len(s.population)):
+            price = s.f(s.population[i])
+            if (Vis2D.min_individual_price > price):
+                s.min_individual = s.population[i]
+                Vis2D.min_individual_price = price
+        s.update()
+        s.show_path(s.min_individual, color=color, w=1)
+        s.plt.pause(s.frameTimeout)
+
+    def show_ant_path(s, i, color):
+        # eval final population
+        s.min_individual = s.population[0]
+        Vis2D.min_individual_price = s.f(s.min_individual)
+        for i in range(1, len(s.population)):
+            price = s.f(s.population[i])
+            if (Vis2D.min_individual_price > price):
+                s.min_individual = s.population[i]
+                Vis2D.min_individual_price = price
+        s.update()
+        s.show_path(s.min_individual, color=color, w=1)
+        s.plt.pause(s.frameTimeout)
+
+    def show_path(s, ga, ars = '->', color = 'k', w = None, draw = True):
+        ea = s.get_edges(ga)
+        if draw:
+            for e in ea:
+                if w == None:
+                    ew = w
+                else:
+                    # ew = s.idx_weights[:len(ga)]
+                    ew = 1
+                nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=e, width=ew, arrowstyle=ars, arrows=True, edge_color=color)
+                s.show_axes()
+        return ga
+
+    def price(s, g):
+        sum = 0
+        for i in range(0, len(g) - 2):
+            sum = sum + s.G[g[i]][g[i + 1]]['weight']
+        return sum
+
+    def vaporize_paths(s):
+        return 0
+
+    def set_edge_pheromone(s, int):
+        return 0
+
+    def get_edge_pheromone(s, node):
+        return 0
+
+    def get_all_feromon_weight(s):
+        return 0
+
+    def get_best_paths_rel_fer(s):
+        return s.get_some_paths_rel_fer()
+
+    def get_some_paths_rel_fer(s, best=True):
+        if(len(s.op) == 0):
+            return 0
+        extreme = 0
+        if not best:
+            extreme = 10000000 # TODO const inf...
+        min_idx = 0
+        for i in range(0, len(s.op)):
+            ap = s.op[i]
+            sum = 0
+            for pi in range(0, len(ap)-1):
+                sum = sum + s.G.get_edge_data(ap[i])['weight']
+            sum = sum + s.G.get_edge_data(ap[0], len(ap)-1)['weight']
+
+            if best and sum < extreme:
+                extreme = sum
+                min_idx = i
+            elif not best and sum > extreme:
+                extreme = sum
+                min_idx = i
+        return min_idx, extreme
+
+    def get_worst_paths_rel_fer(s):
+        return s.get_some_paths_rel_fer(False)
+
+    def sel_next_node(s, i, cur):
+        # return random.choice(s.G.nodes())
+        return random.randint(0, s.NP)
+
+    feromon_const = 0.5
+
+    # def update_feromon(s, cur_node, next_node):
+    def update_feromon(s, path):
+        for pi in range(0, len(path)):
+            cur_node = path[pi]
+            ni = (pi+1) % len(path)
+            next_node = path[ni]
+            old_w = s.G.get_node_data(cur_node, next_node)['weight']
+            # delta = s.get_all_feromon_weight()
+            besti, best = s.get_best_paths_rel_fer()
+            worsti, worst = s.get_worst_paths_rel_fer()
+            if best == 0 or worst == 0:
+                return 0
+            new_w = old_w + ((s.feromon_const * best) / worst)
+            s.G.get_node_data(cur_node, next_node)['weight'] = new_w
+        return new_w
+
+    def walk_path(s, ant):
+        # at start position
+        # pick edge depending on probability calculated with pheromone intensities
+        path = list()
+        cur_node = s.G.nodes()[0]
+        for i in range(0, s.DC-2):
+            path.append(cur_node)
+            next_node = s.sel_next_node(i, cur_node)
+            while next_node in path:
+                next_node = s.sel_next_node(i, cur_node)
+            s.update_feromon(next_node)
+
+        return path
+
+    def alg(s):
+        """
+            Genetic alg. for solving TSP
+        """
+        # population = Generate NP random individuals Evaluate individuals within population
+        # s.population = list()
+        # for i in range(0, s.NP):
+        #     s.population.append(s.random_circle(list(s.G.nodes())))
+        s.np = list()
+        s.op = list()
+        for i in range(0, s.GC):
+            # for each ant find path
+            for ai in range(0, s.NP):
+                new_path = s.walk_path(ai)
+                np.append(new_path)
+                # s.show_ant_path(i, color='orange')
+                s.show_path(new_path, color='orange', w=1)
+                s.plt.sleep(1)
+
+            s.vaporize_paths()
+
+            s.show_min_path(color='green')
+
+        s.show_min_path(color='red')
+        s.plt.pause(10)
         pass
 
-    def update(s):
-        dbg("Iteration", Vis3D.frameNo)
-        # Scale plot ax
-        s.ax.set_xticks([])
-        s.ax.set_yticks([])
-        s.ax.set_title(s.__class__.__name__ + ", iter: {}/{}, frame #{} ".format(s.m, Vis3D.max_iterations, Vis3D.frameNo))
+    def get_edges(s, nodes):
+        edges = list()
 
-        # if(s.max_iterations - 5 < VisualizationBase3D.frameNo):
+        def get_edge(i1, i2):
+            return list(filter(lambda i: i[1] == i2, s.G.edges(i1)))
 
-    def sleep(s):
-        Vis3D.plt.pause(s.frameTimeout)
-        Vis3D.frameNo += 1
+        for i in range(0, len(nodes) - 1):
+            edges.append(get_edge(nodes[i], nodes[i + 1]))
+        edges.append(get_edge(nodes[len(nodes) - 1], nodes[0]))
+        return edges
 
-    def updatep(s):
-        zoffset = 10
-        for i in s.swarm:
-            i.z(s.algp(i))
-        swarm = list(filter(lambda i: i != s.gb,s.swarm.copy()))
-        s.dx = list(map(lambda i: i.x(), swarm))
-        s.dy = list(map(lambda i: i.y(), swarm))
-        s.dz = list(map(lambda i: i.z() + zoffset, swarm))
-        s.ax.scatter(s.dx, s.dy, s.dz, marker='.', color="red")
-        s.ax.scatter(s.gb.x(), s.gb.y(), s.gb.z(), marker='.', color="green")
-
-    def updatev(s, i, idx=0):
-        oz = s.algp(i.n[idx-1])
-        nz = s.algp(i.n[idx])
-        s.ax.plot([i.n[idx].x(), i.n[idx-1].x()], [i.n[idx].y(), i.n[idx-1].y()], zs=[nz, oz], color="red", linewidth=1)
-        s.sleep()
-
-    wc = 0.1
-    phi_p = 0.1
-    phi_g = 0.1
-    v_max = 5
-    v_mult = 5
-
-    def gen_pop(s):
-        s.swarm = []
-        for i in range(0, s.points_cnt):
-            pt = Pt(random.uniform(s.plane[0], s.plane[1]), random.uniform(s.plane[0], s.plane[1]))
-            pt.p.append(s.algp(pt))
-            s.swarm.append(pt)
-
-            # pt = Pt(random.uniform(s.plane[0], s.plane[1]), random.uniform(s.plane[0], s.plane[1]))
-            # s.swarm.append()
-            # s.swarm[i].p[2] = s.algp(s.swarm[i])
-        return s.swarm
-
-    def is_out_range(s, x):
-        min = s.plane[0]
-        max = s.plane[1]
-        if x > max:
-            return True
-        if x < min:
-            return True
-        return False
-
-    def keep_in_range(s, x):
-        min = s.plane[0]
-        max = s.plane[1]
-        if x > max:
-            return max
-        if x < min:
-            return min
+    def random_circle(s, nodes):
+        x = nodes.copy()
+        random.shuffle(x)
         return x
 
-    def sel_best(s):
-        bi = s.swarm[0]
-        bv = s.algp(bi)
-        bidx = 0
-        idx = 0
-        for p in s.swarm:
-            nbv = s.algp(p)
-            if nbv <= bv:
-                bv = nbv
-                bidx = idx
-            idx = idx + 1
-        return bidx
+    def mutate(s, nodes_, cnt = 1):
+        # swaps 2 random elements in array 'cnt' times
+        # nodes = nodes_.copy()
+        # swapped = random.shuffle(nodes)
+        swapped = nodes_.copy()
+        for i in range(0, cnt):
+            pos1 = random.randint(0, len(nodes_)-1)
+            pos2 = random.randint(0, len(nodes_)-1)
+            swapped[pos1], swapped[pos2] = swapped[pos2], swapped[pos1]
+        return swapped
+
+    def update(s, edges=None):
+        """
+        clear and update default network
+        """
+        if edges is None:
+            edges = list(list())
+        s.ax.clear()
+        s.show_axes()
+
+        # Background nodes
+        pprint(s.G.edges())
+        # nx.draw_networkx_edges(s.G, pos=s.layout, edge_color="gray", arrowstyle='-|>', arrowsize=10)
+        forestNodes = list([item for sublist in (([l[0], l[1]]) for l in edges) for item in sublist])
+
+        # dbg("forestNodes", forestNodes)
+        forestNodes = list(filter(None, forestNodes))
+        # dbg("forestNodes -!None", forestNodes)
+        # dbg(set(self.G.nodes()))
+        # null_nodes = nx.draw_networkx_nodes(s.G, pos=s.layout, nodelist=set(s.G.nodes()) - set(forestNodes),
+        #                                     node_color="white", ax=s.ax)
+        null_nodes = nx.draw_networkx_nodes(s.G, pos=s.layout, nodelist=set(s.G.nodes()), node_color="white", ax=s.ax)
+
+        # start node highlight
+        nx.draw_networkx_nodes(s.G, pos=s.layout, nodelist=set(filter(lambda i: i == s.start_node, s.G.nodes())), node_color="green", ax=s.ax)
+
+        if (null_nodes is not None):
+            null_nodes.set_edgecolor("black")
+            nullNodesIds = set(s.G.nodes()) - set(forestNodes)
+            # dbg("nullNodes", nullNodes)
+            nx.draw_networkx_labels(s.G, pos=s.layout, labels=dict(zip(nullNodesIds, nullNodesIds)),
+                                    font_color="black",
+                                    ax=s.ax)
+
+        # Query nodes
+        s.idx_colors = sns.cubehelix_palette(len(forestNodes), start=.5, rot=-.75)[::-1]
+        color_map = []
+
+        query_nodes = nx.draw_networkx_nodes(s.G, pos=s.layout, nodelist=forestNodes,
+                                             node_color=s.idx_colors[:len(forestNodes)], ax=s.ax)
+
+        if query_nodes is not None:
+            query_nodes.set_edgecolor("white")
+        # nx.draw_networkx_labels(s.G, pos=s.layout, labels=dict(zip(forestNodes[0], forestNodes[0])), font_color="red", ax=s.ax)
+        nx.draw_networkx_labels(s.G, pos=s.layout, labels=dict(zip(forestNodes, forestNodes)), font_color="white", ax=s.ax)
+
+        edges = list((l[0], l[1]) for l in edges)
+        dbg("edges", edges)
+        # nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=edges, width=s.idx_weights[:len(edges)] ) # , ax=s.ax, arrowstyle='->', arrowsize=10
+
+        # draw weights
+        labels = nx.get_edge_attributes(s.G, 'weight')
+        # nx.draw_networkx_edge_labels(s.G, s.layout, edge_labels=labels)
+
+        # Scale plot ax
+        # s.ax.set_xticks([])
+        # s.ax.set_yticks([])
+
+        # s.ax.set_title("Step #{}, Price: {}".format(Vis2D.frameNo, Vis2D.min_individual_price))
+        s.ax.set_title("Step #{}, NP: {}, GC {}, DC: {}, Price: {}".format(Vis2D.frameNo,Vis2D.NP,Vis2D.GC,Vis2D.DC, Vis2D.min_individual_price))
+        s.show_axes()
+
+        # self.plt.pause(5)
+        # s.plt.pause(s.frameTimeout)
+        # self.plt.pause(3)
+        Vis2D.frameNo += 1
+    def show_axes(s):
+        s.ax.set_xlim(s.distances[0]-(s.distances[1]*0.1), s.distances[1]+(s.distances[1]*0.1))
+        s.ax.set_ylim(s.distances[0]-(s.distances[1]*0.1), s.distances[1]+(s.distances[1]*0.1))
+        s.ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
 
 
-#######################################
-# Functions definitions
-#######################################
+# 3. Genetic algorithm used to solve Traveling Salesman Problem (TSP) (8 p)
+class TSP(Vis2D):
+    pass
 
-class Sphere(Vis3D):
+r = TSP()
+r.alg()
 
-    max_iterations = 5
-
-    def alg(s, dx, dy):
-        return (np.power(dx, 2) + (np.power(dy, 2)))
-
-class Schwefel(Vis3D):
-    """
-    Problematic, neads tweaking of params for generating next generation
-    """
-    plane = [-500, 500, 500]
-    # max_iterations = 20
-    v_max = 50
-    v_mult = 30
-
-    c = 418.9829
-
-    def alg(s, dx, dy):
-        return (s.c * s.d - ( (dx * np.sin(np.sqrt(np.abs(dx))))) + (dy * np.sin(np.sqrt(np.abs(dy)))))
-
-class Rosenbrock(Vis3D):
-    def alg(s, dx, dy):
-        return (100 * np.power((dy - np.power(dx, 2)), 2) + np.power((dx - 1), 2))
-
-class Rastrigin(Vis3D):
-
-    plane = [-5, 5, 30]
-
-    v_max = 10
-    v_mult = 10
-
-    c = 10
-
-    def alg(s, dx, dy):
-        def single(x):
-            return (np.power(x, 2) - s.c * np.cos(2 * np.pi * x))
-        return ((s.c * s.d ) + single(dx) + single(dy))
-
-class Griewangk(Vis3D):
-    # https://en.wikipedia.org/wiki/Griewank_function
-
-    plane = [-100, 100, 80]
-
-    def alg(s, dx, dy):
-        def single2(x, i):
-            return np.cos(x/np.sqrt(i))
-        def single1(x, i):
-            return np.power(x,2)
-        return 1 + 1/4000 * (single1(dx, 1) + single1(dy, 2)) - (single2(dx, 1) * single2(dy, 2))
-
-class Levy(Vis3D):
-
-    plane = [-10, 10, 30]
-
-    v_max = 10
-    v_mult = 10
-
-    def alg(s, dx, dy):
-        def wi(x):
-            return 1 + (x -1)/4
-        def single(x):
-            return np.power((wi(x) -1),2) * (1+10*np.power(np.sin(np.pi * wi(x) + 1), 2))
-        return np.power(np.sin(np.pi * wi(dx)),2) + single(dx) + single(dy) + np.power(wi(dy)-1, 2)*(1+(np.power(np.sin(2*np.pi*wi(dy)),2)))
-
-class Michalewicz(Vis3D):
-
-    m = 10
-    plane = [0, 4, 30]
-
-    def alg(s, dx, dy):
-        def single(x, i):
-            return (np.sin(x)*np.power(np.sin((i*np.power(x,2))/np.pi),2*s.m))
-        return - (single(dx, 1) + single(dy, 2))
-
-class Zakharov(Vis3D):
-
-    plane = [-10, 10, 30]
-
-    # max_iterations = 20
-
-    def alg(s, dx, dy):
-        def f1(x):
-            return np.power(x, 2)
-        def f2(x, i):
-            return 0.5 * i * x
-        def f3(x, i):
-            return 0.5 * i * x
-        def pw(x, i):
-            return np.power(x, i)
-        return f1(dx) + f1(dy) + pw(f2(dx, 1) + f2(dy, 2), 2) + pw(f3(dx, 1) + f3(dy, 2), 4)
-
-class Ackley(Vis3D):
-    a = 20
-    b = 0.2
-    c = 2 * np.pi
-    d = 2
-
-    # max_iterations = 20
-
-    def alg(s, xi, yi):
-        part1 = - s.a * np.exp((-s.b * np.sqrt((1.0 / s.d) * (np.power(xi, 2) + np.power(yi, 2)))))
-        part2 = - np.exp((1.0 / s.d) * (np.cos(s.c * xi) + np.cos(s.c * yi)))
-        return part1 + part2 + s.a + np.exp(1)
-
-
-# Sphere, Schwefel, Rosenbrock, Rastrigin, Griewangk, Levy, Michalewicz, Zakharov, Ackley
-
-plt.pause(2)
-
-r = Sphere()
-r = Schwefel()
-r = Rosenbrock()
-r = Rastrigin()
-r = Griewangk()
-r = Levy()
-r = Michalewicz()
-r = Zakharov()
-r = Ackley()
-# r = Vis3D()
 
 exit(0)
