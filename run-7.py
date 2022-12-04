@@ -220,12 +220,6 @@ class Vis2D(object):
 
         return 0
 
-    def set_edge_pheromone(s, int):
-        return 0
-
-    def get_edge_pheromone(s, node):
-        return 0
-
     def get_all_feromon_weight(s):
         return 0
 
@@ -328,7 +322,7 @@ class Vis2D(object):
                 new_path = s.walk_path(ai)
                 s.np.append(new_path)
                 # s.show_ant_path(i, color='orange')
-                width_a = np.power(((s.NP - ai)),1.5)
+                width_a = np.power((s.NP - ai),1.5)
                 # width_a = ((s.NP - ai)*1.5)
                 col = s.colors[ai]
                 color = matplotlib.colors.to_rgba((col[0], col[1], col[2], 0.5), alpha=1.0)
