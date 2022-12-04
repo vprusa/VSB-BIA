@@ -278,6 +278,48 @@ class Vis2D(object):
         s.G.get_edge_data(cur_node, next_node)['fer_n_sum'] = s.G.get_edge_data(cur_node, next_node)['fer_n_sum'] * s.vap_sum_const
         return new_w
 
+    alpha = 1
+    beta = 1
+
+    def tau(self, r, s):
+        return 0
+
+    # def next_node(s, ant, idx, path):
+    #     oes = list(s.G.edges(0, data=True))
+    #     max_i = None
+    #     max_fer = 0
+    #     for i in range(0, len(oes)-1):
+    #         e = oes[i]
+    #         if e[1] not in path:
+    #             if max_fer <= e[2]['fer_n_sum']:
+    #                 max_fer <= e[2]['fer_n_sum']
+    #                 max_i = i
+    #     return max_i
+
+    def tau_eta(s, e):
+        return np.power(e[2]['fer_n_sum'], s.alpha) * np.power(1/e[2]['weight'], s.beta)
+
+    def next_node(s, ant, idx, path):
+        oes = list(s.G.edges(0, data=True))
+        max_i = None
+        max_fer = 0
+        fer_dist_sum = 0
+        psts = list()
+        psts_all = list()
+        for i in range(0, len(oes)-1):
+            e = oes[i]
+            fer_dist_sum = fer_dist_sum + s.tau_eta(e)
+            psts.append(s.tau_eta(e))
+            # if e[1] not in path:
+            #     if max_fer <= e[2]['fer_n_sum']:
+            #         max_fer <= e[2]['fer_n_sum']
+            #         max_i = i
+        for i in range(0, len(oes) - 1):
+            psts_all.append(psts[i]/fer_dist_sum)
+        pprint(psts_all)
+        random.choices(oes, weights=psts_all, k=1)
+        return max_i
+
     def walk_path(s, ant):
         # at start position
         # pick edge depending on probability calculated with pheromone intensities
@@ -286,9 +328,11 @@ class Vis2D(object):
         cur_node = 0
         # path.append(cur_node)
         path.append(cur_node)
+        prev_node = -1
         for i in range(0, s.DC-1):
             # next_node = s.sel_next_node(i, cur_node)
-            next_node = random.randint(0, s.DC - 1)
+            # next_node = random.randint(0, s.DC - 1)
+            next_node = s.next_node(ant, i, path)
             while next_node in path:
                 # next_node = s.sel_next_node(i, cur_node)
                 next_node = random.randint(0, s.DC - 1)
