@@ -55,8 +55,10 @@ class Vis2D(object):
     GC = 20  # generation cnt
     # NP = 6  # population cnt
     # DC = 6  # In TSP, it will be a number of cities
-    NP = 3  # population cnt
-    DC = 4  # In TSP, it will be a number of cities
+    # NP = 3  # population cnt
+    # DC = 4  # In TSP, it will be a number of cities
+    NP = 20  # population cnt
+    DC = 20  # In TSP, it will be a number of cities
 
     figsize = (10, 6)
     # NP = 20  # population cnt
@@ -83,11 +85,14 @@ class Vis2D(object):
             s.G = nx.from_edgelist(ast.literal_eval(s.graphData))
         # generates random weights to graph
         # poss = ((100,100), (400,100), (100,400), (400,400))
-        poss = ((100,100), (300,100), (100,200), (400,400))
+        # poss = ((100,100), (300,100), (100,200), (400,400))
+        poss = None
         idx = 0
         for (u, v) in s.G.nodes(data=True):
-            # v['pos'] = (random.randint(s.distances[0], s.distances[1]), random.randint(s.distances[0], s.distances[1]))
-            v['pos'] = poss[idx]
+            if poss is not None:
+                v['pos'] = poss[idx]
+            else:
+                v['pos'] = (random.randint(s.distances[0], s.distances[1]), random.randint(s.distances[0], s.distances[1]))
             idx = idx + 1
 
         # for (u, v) in s.G.nodes(data=True):
@@ -99,7 +104,7 @@ class Vis2D(object):
             real_dist = np.sqrt(np.power(u1[0]-v1[0], 2) + np.power(u1[1]-v1[1], 2))
             w['weight'] = int(real_dist)
             w['fer_n'] = 0
-            w['fer_n_sum'] = 0
+            w['fer_n_sum'] = s.feromon_prime_str
             w['fer_o'] = 0
 
         # or load graph with weights them directly...
@@ -168,15 +173,8 @@ class Vis2D(object):
 
 
     def show_sum_feromon(s):
-        # s.np_sum2 = list(s.G.edges(data=True))
-        # edges = s.G.edges()
-        # nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=e, width=w, arrowstyle=ars, arrows=True, edge_color=color)
-        # nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=edges, width=s.idx_weights[:len(edges)] ) # , ax=s.ax, arrowstyle='->', arrowsize=10
-        # nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=edges, width=s.idx_weights[:len(edges)] ) # , ax=s.ax, arrowstyle='->', arrowsize=10
-        # weights = list(map(lambda x: x[2]['fer_n_sum'] / 100 if x[2]['fer_n_sum'] != 0 else 0, list(s.G.edges(data=True))))
-        # weights = list(map(lambda x: x[2]['fer_n_sum'] if x[2]['fer_n_sum'] != 0 else 0, list(s.G.edges(data=True))))
         weights = list(map(lambda x: x[2]['fer_n_sum'] if x[2]['fer_n_sum'] != 0 else 0, list(s.G.edges(data=True))))
-        nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=list(s.G.edges()), width=weights, edge_color='red')
+        nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=list(s.G.edges()), width=weights, edge_color='green')
         pprint(list(s.G.edges(data=True)))
 
     def show_path(s, ga, ars='->', color='k', w=None, draw=True):
@@ -218,6 +216,8 @@ class Vis2D(object):
         # besti, best = s.get_best_paths_rel_fer()
         # vaporize all paths
         for e in list(s.G.edges(data=True)):
+            if 'fer_sum_o' not in e[2]:
+                e[2]['fer_sum_o'] = 0
             e[2]['fer_sum_vap'] = (e[2]['fer_sum_o'] + e[2]['fer_sum_n']) * s.vap_const
             e[2]['fer_sum_o'] = e[2]['fer_sum_vap']
 
@@ -273,6 +273,7 @@ class Vis2D(object):
         return random.randint(0, s.NP-1)
 
     feromon_const = 0.5
+    feromon_prime_str = 0.2
 
     def update_feromon(s, cur_node, next_node):
     # def update_feromon(s, path):
@@ -284,10 +285,13 @@ class Vis2D(object):
         besti, best = s.get_best_paths_rel_fer()
         worsti, worst = s.get_worst_paths_rel_fer()
         if best == 0 or worst == s.max_w:
-            return 0
+            # return 0
+            s.G.get_edge_data(cur_node, next_node)['fer_o'] = s.feromon_prime_str
         old_w = s.G.get_edge_data(cur_node, next_node)['fer_o']
         new_w = old_w + ((s.feromon_const * best) / worst)
         s.G.get_edge_data(cur_node, next_node)['fer_n'] = new_w
+        # if 'fer_n_sum' not in s.G.get_edge_data(cur_node, next_node):
+        #     s.G.get_edge_data(cur_node, next_node)['fer_n_sum'] = 0
         s.G.get_edge_data(cur_node, next_node)['fer_n_sum'] = s.G.get_edge_data(cur_node, next_node)['fer_n_sum'] + new_w
         s.G.get_edge_data(cur_node, next_node)['fer_n_sum'] = s.G.get_edge_data(cur_node, next_node)['fer_n_sum'] * s.vap_sum_const
         return new_w
@@ -313,10 +317,9 @@ class Vis2D(object):
     def tau_eta(s, e):
         return np.power(e[2]['fer_n_sum'], s.alpha) * np.power(1/e[2]['weight'], s.beta)
 
-    def next_node(s, ant, idx, path):
-        oes = list(s.G.edges(0, data=True))
-        max_i = None
-        max_fer = 0
+    def next_node(s, ant, idx, path, cur):
+        oes = list(filter(lambda x: x[1] not in path, list(s.G.edges(cur, data=True))))
+
         fer_dist_sum = 0
         psts = list()
         psts_all = list()
@@ -342,6 +345,8 @@ class Vis2D(object):
 
         return next_e[0][1]
 
+    max_nn_search_cnt = 10
+
     def walk_path(s, ant):
         # at start position
         # pick edge depending on probability calculated with pheromone intensities
@@ -354,17 +359,22 @@ class Vis2D(object):
         for i in range(0, s.DC-1):
             # next_node = s.sel_next_node(i, cur_node)
             # next_node = random.randint(0, s.DC - 1)
-            next_node = s.next_node(ant, i, path)
+            next_node = s.next_node(ant, i, path, cur_node)
+            nn_i = 0
             while next_node in path:
                 # next_node = s.sel_next_node(i, cur_node)
                 # next_node = random.randint(0, s.DC - 1)
-                next_node = s.next_node(ant, i, path)
+                next_node = s.next_node(ant, i, path, cur_node)
+                # if nn_i > s.max_nn_search_cnt:
+                nn_i = nn_i + 1
             # s.update_feromon(next_node)
             s.update_feromon(cur_node, next_node)
             cur_node = next_node
             path.append(cur_node)
+        s.update_feromon(next_node, s.start_node)
 
         return path
+    pause_path = 0.1
 
     def alg(s):
         """
@@ -383,33 +393,35 @@ class Vis2D(object):
             s.colors.append(rgb)
         s.np = list()
         s.op = list()
+        # init random feromons
+        # for e in list(s.G.edges(data=True)):
+        #     e[2]['fer_n_sum']
+
         for i in range(0, s.GC):
             # for each ant find path
             for ai in range(0, s.NP):
                 new_path = s.walk_path(ai)
                 s.np.append(new_path)
                 # s.show_ant_path(i, color='orange')
-                width_a = np.power((s.NP - ai),1.5)
+                width_a = np.power((s.NP - ai),0.2)
                 # width_a = ((s.NP - ai)*1.5)
                 col = s.colors[ai]
                 color = matplotlib.colors.to_rgba((col[0], col[1], col[2], 0.5), alpha=1.0)
                 # s.show_path(new_path, color=s.colors[ai], w=width)
                 s.show_path(new_path, color=color, w=width_a)
-                s.plt.pause(0.5)
+                s.plt.pause(s.pause_path)
 
             s.vaporize_paths()
             color = matplotlib.colors.to_rgba((0, 0, 0, 0.6), alpha=0.3)
             s.op = s.np
+            s.np = list()
             s.update()
             besti, best = s.get_best_paths_rel_fer()
             s.show_sum_feromon()
             s.show_path(s.op[besti], color='green', w=1)
-            s.plt.pause(1)
+            s.plt.pause(3)
             s.update()
 
-            # s.show_min_path(color='green')
-
-        # s.show_min_path(color='red')
         s.plt.pause(10)
         pass
 
