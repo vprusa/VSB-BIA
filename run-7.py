@@ -52,11 +52,15 @@ class Vis2D(object):
     # D = 20  # In TSP, it will be a number of cities
     nxgraphType = "complete_graph"
 
-    GC = 20  # generation cnt
     # NP = 6  # population cnt
     # DC = 6  # In TSP, it will be a number of cities
     # NP = 3  # population cnt
     # DC = 4  # In TSP, it will be a number of cities
+    # GC = 5  # generation cnt
+    # NP = 10  # population cnt
+    # DC = 10  # In TSP, it will be a number of cities
+    GC = 15  # generation cnt
+    # GC = 20  # generation cnt
     NP = 20  # population cnt
     DC = 20  # In TSP, it will be a number of cities
 
@@ -65,6 +69,10 @@ class Vis2D(object):
     # GC = 40  # generation cnt
     # DC = 8  # In TSP, it will be a number of cities
     # figsize = (6, 4)
+
+    pause_path = 0.01
+    pause_iter_res = 1
+    path_vis_str_mltp_const = 0.025
 
     population = None
 
@@ -104,7 +112,7 @@ class Vis2D(object):
             real_dist = np.sqrt(np.power(u1[0]-v1[0], 2) + np.power(u1[1]-v1[1], 2))
             w['weight'] = int(real_dist)
             w['fer_n'] = 0
-            w['fer_n_sum'] = s.feromon_prime_str
+            w['fer_n_sum'] = s.feromon_prime_str_init
             w['fer_o'] = 0
 
         # or load graph with weights them directly...
@@ -127,6 +135,7 @@ class Vis2D(object):
         s.layout = list(pos)
         # s.fig = s.plt.figure("BIA - #3 - Genetic alg. on Traveling Salesman Problem (TSP) ", figsize=s.figsize)
         # s.fig.set_title("BIA - #3 - Genetic alg. on Traveling Salesman Problem (TSP) ")
+        s.fig.set_title("BIA - #7 - ")
         # s.ax = s.plt.axes()
         # s.plt.axis("on")
         s.ax.set_xlim(s.distances[0], s.distances[1])
@@ -144,32 +153,19 @@ class Vis2D(object):
             I use internal function 'price()' (note: should I rename to 'cost()'?)
         """
         return s.price(i)
-
-    def show_min_path(s, color='blue'):
-        # eval final population
-        s.min_individual = s.population[0]
-        Vis2D.min_individual_price = s.f(s.min_individual)
-        for i in range(1, len(s.population)):
-            price = s.f(s.population[i])
-            if (Vis2D.min_individual_price > price):
-                s.min_individual = s.population[i]
-                Vis2D.min_individual_price = price
-        s.update()
-        s.show_path(s.min_individual, color=color, w=1)
-        s.plt.pause(s.frameTimeout)
-
-    def show_ant_path(s, i, color):
-        # eval final population
-        s.min_individual = s.population[0]
-        Vis2D.min_individual_price = s.f(s.min_individual)
-        for i in range(1, len(s.population)):
-            price = s.f(s.population[i])
-            if (Vis2D.min_individual_price > price):
-                s.min_individual = s.population[i]
-                Vis2D.min_individual_price = price
-        s.update()
-        s.show_path(s.min_individual, color=color, w=1)
-        s.plt.pause(s.frameTimeout)
+    #
+    # def show_ant_path(s, i, color):
+    #     # eval final population
+    #     s.min_individual = s.population[0]
+    #     Vis2D.min_individual_price = s.f(s.min_individual)
+    #     for i in range(1, len(s.population)):
+    #         price = s.f(s.population[i])
+    #         if (Vis2D.min_individual_price > price):
+    #             s.min_individual = s.population[i]
+    #             Vis2D.min_individual_price = price
+    #     s.update()
+    #     s.show_path(s.min_individual, color=color, w=1)
+    #     s.plt.pause(s.frameTimeout)
 
 
     def show_sum_feromon(s):
@@ -178,7 +174,10 @@ class Vis2D(object):
         pprint(list(s.G.edges(data=True)))
 
     def show_path(s, ga, ars='->', color='k', w=None, draw=True):
+        price = 0
         ea = s.get_edges(ga)
+        for e in list(ea):
+            price = price + list(list(s.get_edges(ga))[0])[0][2]['weight']
         if draw:
             for e in ea:
                 if w == None:
@@ -188,7 +187,7 @@ class Vis2D(object):
                     ew = 1
                 nx.draw_networkx_edges(s.G, pos=s.layout, edgelist=e, width=w, arrowstyle=ars, arrows=True, edge_color=color)
                 s.show_axes()
-        return ga
+        return ga, price
 
     def price(s, g):
         sum = 0
@@ -272,8 +271,12 @@ class Vis2D(object):
         # return random.choice(s.G.nodes())
         return random.randint(0, s.NP-1)
 
+    old_best_price = None
+    best_path = []
+
     feromon_const = 0.5
-    feromon_prime_str = 0.2
+    feromon_prime_str_init = 0.1
+    feromon_prime_str = 0.1
 
     def update_feromon(s, cur_node, next_node):
     # def update_feromon(s, path):
@@ -296,8 +299,8 @@ class Vis2D(object):
         s.G.get_edge_data(cur_node, next_node)['fer_n_sum'] = s.G.get_edge_data(cur_node, next_node)['fer_n_sum'] * s.vap_sum_const
         return new_w
 
-    alpha = 1
-    beta = 1
+    alpha = 0.5
+    beta = 0.5
 
     def tau(self, r, s):
         return 0
@@ -374,7 +377,6 @@ class Vis2D(object):
         s.update_feromon(next_node, s.start_node)
 
         return path
-    pause_path = 0.1
 
     def alg(s):
         """
@@ -403,7 +405,7 @@ class Vis2D(object):
                 new_path = s.walk_path(ai)
                 s.np.append(new_path)
                 # s.show_ant_path(i, color='orange')
-                width_a = np.power((s.NP - ai),0.2)
+                width_a = np.power((s.NP - ai),s.path_vis_str_mltp_const)
                 # width_a = ((s.NP - ai)*1.5)
                 col = s.colors[ai]
                 color = matplotlib.colors.to_rgba((col[0], col[1], col[2], 0.5), alpha=1.0)
@@ -418,9 +420,17 @@ class Vis2D(object):
             s.update()
             besti, best = s.get_best_paths_rel_fer()
             s.show_sum_feromon()
-            s.show_path(s.op[besti], color='green', w=1)
-            s.plt.pause(3)
+            ga, price = s.show_path(s.op[besti], color='red', w=1)
+
+            if Vis2D.old_best_price is None or price < Vis2D.old_best_price:
+                Vis2D.old_best_price = price
+                s.best_path = s.op[besti]
+            Vis2D.min_individual_price = price
+            s.plt.pause(s.pause_iter_res)
             s.update()
+
+        s.show_sum_feromon()
+        s.show_path(s.best_path, color='blue', w=1)
 
         s.plt.pause(10)
         pass
@@ -429,7 +439,7 @@ class Vis2D(object):
         edges = list()
 
         def get_edge(i1, i2):
-            return list(filter(lambda i: i[1] == i2, s.G.edges(i1)))
+            return list(filter(lambda i: i[1] == i2, s.G.edges(i1, data=True)))
 
         for i in range(0, len(nodes) - 1):
             edges.append(get_edge(nodes[i], nodes[i + 1]))
@@ -510,7 +520,7 @@ class Vis2D(object):
         # s.ax.set_yticks([])
 
         # s.ax.set_title("Step #{}, Price: {}".format(Vis2D.frameNo, Vis2D.min_individual_price))
-        s.ax.set_title("Step #{}, NP: {}, GC {}, DC: {}, Price: {}".format(Vis2D.frameNo,Vis2D.NP,Vis2D.GC,Vis2D.DC, Vis2D.min_individual_price))
+        s.ax.set_title("Step #{}, NP: {}, GC {}, DC: {}, Price: {}, Best Price: {}".format(Vis2D.frameNo,Vis2D.NP,Vis2D.GC,Vis2D.DC, Vis2D.min_individual_price, Vis2D.old_best_price))
         s.show_axes()
 
         # self.plt.pause(5)
