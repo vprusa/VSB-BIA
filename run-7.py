@@ -203,16 +203,29 @@ class Vis2D(object):
 
     def vaporize_paths(s):
         # sum feromon intenzities of whole graph to single
-        s.np_sum = s.np[0].copy()
 
-        for i in range(1, len(s.np)):
-            for ii in s.np[i]:
-                s.np_sum[ii] = s.np_sum[ii] + s.np[i][ii]
+        # s.np_sum = s.np[0].copy()
+        # for i in range(1, len(s.np)):
+        #     for ii in s.np[i]:
+        #         s.np_sum[ii] = s.np_sum[ii] + s.np[i][ii]
+        # s.np_sum =w
+        for e in list(s.G.edges(data=True)):
+            e[2]['fer_sum_n'] = 0
+            for p in range(0, len(s.np)):
+                for seg_i in range(0,len(s.np[p])-1):
+                    e[2]['fer_sum_n'] = e[2]['fer_sum_n'] + s.G.get_edge_data(s.np[p][seg_i], s.np[p][seg_i+1])['fer_n']
 
         # besti, best = s.get_best_paths_rel_fer()
         # vaporize all paths
-        for i in range(1, len(s.np_sum)):
-            s.np_sum[i] = s.np_sum[i] * s.vap_const
+        for e in list(s.G.edges(data=True)):
+            e[2]['fer_sum_vap'] = (e[2]['fer_sum_o'] + e[2]['fer_sum_n']) * s.vap_const
+            e[2]['fer_sum_o'] = e[2]['fer_sum_vap']
+
+        # store new feromon to old feromon data
+        for e in list(s.G.edges(data=True)):
+            e[2]['fer_o'] = e[2]['fer_n']
+            e[2]['fer_n'] = 0
+        # s.G.get_edge_data(cur_node, next_node)['fer_n_sum'] = s.G.get_edge_data(cur_node, next_node)['fer_n_sum'] * s.vap_sum_const
 
         # for i in range(0,len(list(s.G.edges()))-1):
         #     i2 = (i+1) % len(list(s.G.edges()))
@@ -240,7 +253,8 @@ class Vis2D(object):
             sum = 0
             for pi in range(0, len(ap)-1):
                 ni = ((pi+1) % len(ap))
-                sum = sum + s.G.get_edge_data(ap[pi], ap[ni])['weight']
+                # sum = sum + s.G.get_edge_data(ap[pi], ap[ni])['weight']
+                sum = sum + s.G.get_edge_data(ap[pi], ap[ni])['fer_o']
             # sum = sum + s.G.get_edge_data(ap[0], len(ap)-1)['weight']
 
             if best and sum > extreme:
@@ -306,7 +320,7 @@ class Vis2D(object):
         fer_dist_sum = 0
         psts = list()
         psts_all = list()
-        for i in range(0, len(oes)-1):
+        for i in range(0, len(oes)):
             e = oes[i]
             fer_dist_sum = fer_dist_sum + s.tau_eta(e)
             psts.append(s.tau_eta(e))
@@ -314,11 +328,19 @@ class Vis2D(object):
             #     if max_fer <= e[2]['fer_n_sum']:
             #         max_fer <= e[2]['fer_n_sum']
             #         max_i = i
-        for i in range(0, len(oes) - 1):
-            psts_all.append(psts[i]/fer_dist_sum)
+        for i in range(0, len(oes)):
+            if fer_dist_sum != 0:
+                psts_all.append(psts[i] / fer_dist_sum)
+            else:
+                psts_all.append(0)
+
         pprint(psts_all)
-        random.choices(oes, weights=psts_all, k=1)
-        return max_i
+        if sum(psts_all) == 0:
+            next_e = random.choices(oes, k=1)
+        else:
+            next_e = random.choices(oes, weights=psts_all, k=1)
+
+        return next_e[0][1]
 
     def walk_path(s, ant):
         # at start position
@@ -335,7 +357,8 @@ class Vis2D(object):
             next_node = s.next_node(ant, i, path)
             while next_node in path:
                 # next_node = s.sel_next_node(i, cur_node)
-                next_node = random.randint(0, s.DC - 1)
+                # next_node = random.randint(0, s.DC - 1)
+                next_node = s.next_node(ant, i, path)
             # s.update_feromon(next_node)
             s.update_feromon(cur_node, next_node)
             cur_node = next_node
