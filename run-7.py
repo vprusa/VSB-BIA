@@ -1,3 +1,7 @@
+###
+# Ant's path are random colors,
+# after each iteration of ants path walks the best path is visualized red on green intensities of pheromones
+# Note: pheromones = feromon
 try:
     import seaborn as sns
     pass
@@ -146,8 +150,10 @@ class Vis2D(object):
                 s.show_axes()
         return ga, price
 
+    # vap_const = 0.5
+    # vap_sum_const = 0.3
     vap_const = 0.5
-    vap_sum_const = 0.3
+    vap_sum_const = 0.95
 
     def vaporize_paths(s, price):
         # sum feromon intenzities of whole graph to single
