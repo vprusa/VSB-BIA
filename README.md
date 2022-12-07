@@ -101,6 +101,7 @@ Run:
 ## 7. And Colony Optimization applied to Travelling Salesman Problem (TSP) (8 p)
 
 ![./7.gif](./7.gif)
+![./7.2.gif](./7.2.gif)
 
 
 ## Note:

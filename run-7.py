@@ -54,7 +54,7 @@ class Vis2D(object):
     # NP = 10  # population cnt
     # DC = 10  # In TSP, it will be a number of cities
     # GC = 20  # generation cnt
-    GC = 20  # generation cnt
+    GC = 10  # generation cnt
     NP = 20  # population cnt
     DC = 20  # In TSP, it will be a number of cities
 
@@ -150,10 +150,10 @@ class Vis2D(object):
                 s.show_axes()
         return ga, price
 
-    # vap_const = 0.5
-    # vap_sum_const = 0.3
     vap_const = 0.5
-    vap_sum_const = 0.95
+    vap_sum_const = 0.3
+    # vap_const = 0.5
+    # vap_sum_const = 0.95
 
     def vaporize_paths(s, price):
         # sum feromon intenzities of whole graph to single
