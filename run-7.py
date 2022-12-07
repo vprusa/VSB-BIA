@@ -49,8 +49,8 @@ class Vis2D(object):
     # GC = 5  # generation cnt
     # NP = 10  # population cnt
     # DC = 10  # In TSP, it will be a number of cities
-    GC = 15  # generation cnt
     # GC = 20  # generation cnt
+    GC = 20  # generation cnt
     NP = 20  # population cnt
     DC = 20  # In TSP, it will be a number of cities
 
@@ -61,7 +61,7 @@ class Vis2D(object):
     # figsize = (6, 4)
 
     pause_path = 0.01
-    pause_iter_res = 1
+    pause_iter_res = 3
     path_vis_str_mltp_const = 0.025
 
     population = None
@@ -147,9 +147,9 @@ class Vis2D(object):
         return ga, price
 
     vap_const = 0.5
-    vap_sum_const = 0.95
+    vap_sum_const = 0.3
 
-    def vaporize_paths(s):
+    def vaporize_paths(s, price):
         # sum feromon intenzities of whole graph to single
         for e in list(s.G.edges(data=True)):
             e[2]['fer_sum_n'] = 0
@@ -161,7 +161,7 @@ class Vis2D(object):
         for e in list(s.G.edges(data=True)):
             if 'fer_sum_o' not in e[2]:
                 e[2]['fer_sum_o'] = 0
-            e[2]['fer_sum_vap'] = (e[2]['fer_sum_o'] + e[2]['fer_sum_n']) * s.vap_const
+            e[2]['fer_sum_vap'] = (e[2]['fer_sum_o'] + e[2]['fer_sum_n']) * (s.vap_const/price)
             e[2]['fer_sum_o'] = e[2]['fer_sum_vap']
 
         # store new feromon to old feromon data
@@ -305,24 +305,28 @@ class Vis2D(object):
                 color = matplotlib.colors.to_rgba((col[0], col[1], col[2], 0.5), alpha=1.0)
                 s.show_path(new_path, color=color, w=width_a)
                 s.plt.pause(s.pause_path)
+            besti, best = s.get_best_paths_rel_fer()
+            # calc sum feromons and path price for later use and visualize it
+            if besti != -1:
+                s.update()
+                s.show_sum_feromon()
+                ga, price = s.show_path(s.op[besti], color='red', w=1)
 
-            s.vaporize_paths()
+                if Vis2D.old_best_price is None or price < Vis2D.old_best_price:
+                    Vis2D.old_best_price = price
+                    s.best_path = s.op[besti]
+                Vis2D.min_individual_price = price
+                s.vaporize_paths(price)
+            else:
+                s.vaporize_paths(1)
+
             # reset paths for each generation
             s.op = s.np
             s.np = list()
             # visualization base
-            s.update()
-            besti, best = s.get_best_paths_rel_fer()
-            # calc sum feromons and path price for later use and visualize it
-            s.show_sum_feromon()
-            ga, price = s.show_path(s.op[besti], color='red', w=1)
-
-            if Vis2D.old_best_price is None or price < Vis2D.old_best_price:
-                Vis2D.old_best_price = price
-                s.best_path = s.op[besti]
-            Vis2D.min_individual_price = price
             s.plt.pause(s.pause_iter_res)
             s.update()
+            # s.update()
 
         s.show_sum_feromon()
         s.show_path(s.best_path, color='blue', w=1)
